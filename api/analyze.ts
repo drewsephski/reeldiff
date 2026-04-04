@@ -2,19 +2,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { config } from 'dotenv';
 import { generateText, Output } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { Redis } from '@upstash/redis';
 import { z } from 'zod';
 
 config({ path: '.env.local' });
-
-const RATE_LIMIT = 5;
-
-const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-  ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    })
-  : null;
 
 const summarySchema = z.object({
   headline: z.string().describe('A catchy, short headline (max 10 words) that captures the essence of this PR'),
@@ -37,27 +27,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (req.method !== 'POST') {
       return res.status(405).json({ error: 'Method not allowed' });
-    }
-
-    // Rate limiting (skip if Redis is unavailable)
-    if (redis) {
-      try {
-        const forwarded = req.headers['x-forwarded-for'];
-        const ip = typeof forwarded === 'string'
-          ? forwarded.split(',')[0].trim()
-          : req.socket?.remoteAddress ?? 'unknown';
-        const key = `ratelimit:analyze:${ip}`;
-        const count = await redis.get<number>(key) ?? 0;
-        if (count >= RATE_LIMIT) {
-          return res.status(429).json({ error: 'Rate limit exceeded. You can generate 5 videos per day.' });
-        }
-        const now = new Date();
-        const midnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0));
-        const ttl = Math.floor((midnight.getTime() - now.getTime()) / 1000);
-        await redis.set(key, count + 1, { ex: ttl });
-      } catch {
-        // Redis unavailable — skip rate limiting
-      }
     }
 
     const { prUrl } = req.body;
