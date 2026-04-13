@@ -8,6 +8,10 @@ import {
   Easing,
 } from 'remotion';
 import { enhancedSprings, useWaveFloat, useGlowPulse } from '../enhancedAnimations';
+import {
+  usePerspectiveTilt,
+  usePhysicsParticles,
+} from '../cinematicEffects';
 import { typography, colors, spacing, radius } from '../designSystem';
 
 interface IntroSceneProps {
@@ -217,6 +221,17 @@ export const IntroScene: React.FC<IntroSceneProps> = ({
   // Use wave float for organic motion
   const { y: floatY, rotate: floatRotate } = useWaveFloat(0, 8, 0.04, 0);
 
+  // 3D perspective tilt for depth
+  const perspectiveTilt = usePerspectiveTilt(0);
+
+  // Physics particles for background effect
+  const physicsParticles = usePhysicsParticles(15, accentColor, {
+    gravity: 0.15,
+    friction: 0.97,
+    turbulence: 0.08,
+    spawnRate: 8,
+  });
+
   // Main title - dramatic spring entrance with magnetic effect
   const titleSpring = spring({ frame, fps, config: enhancedSprings.dramatic });
   const titleY = interpolate(titleSpring, [0, 1], [120, 0], {
@@ -290,14 +305,42 @@ export const IntroScene: React.FC<IntroSceneProps> = ({
       {/* Glowing corner brackets */}
       <CornerBrackets frame={frame} accentColor={accentColor} fps={fps} />
 
-      {/* Main content container with exit animation */}
+      {/* Physics particles background effect */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 5,
+        }}
+      >
+        {physicsParticles.map((p, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              left: p.x,
+              top: p.y,
+              width: p.size,
+              height: p.size,
+              borderRadius: '50%',
+              backgroundColor: p.color,
+              opacity: p.opacity,
+              transform: `scale(${p.scale}) rotate(${p.rotation}deg)`,
+              boxShadow: `0 0 ${p.size * 2}px ${p.color}`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Main content container with 3D perspective and exit animation */}
       <div
         style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           gap: spacing.xl,
-          transform: `translateY(${floatY + exitY}px) rotate(${floatRotate * 0.5}deg) scale(${exitScale})`,
+          transform: `${perspectiveTilt.transform} translateY(${floatY + exitY}px) rotate(${floatRotate * 0.5}deg) scale(${exitScale})`,
           opacity: exitOpacity,
           zIndex: 10,
         }}

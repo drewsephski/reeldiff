@@ -194,7 +194,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
               .pricing-modal {
                 position: relative;
                 width: 100%;
-                max-width: 480px;
+                max-width: 720px;
                 max-height: calc(100vh - 48px);
                 overflow-y: auto;
                 background: var(--bg-primary);
@@ -294,19 +294,22 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
 
               .pricing-tiers {
                 display: flex;
-                flex-direction: column;
-                gap: 16px;
+                flex-direction: row;
+                gap: 20px;
                 margin-bottom: 20px;
               }
 
               .pricing-tier {
                 position: relative;
-                padding: 24px;
+                flex: 1;
+                padding: 28px 20px;
                 background: var(--bg-secondary);
                 border: 2px solid var(--border);
-                border-radius: 12px;
+                border-radius: 14px;
                 text-align: center;
                 transition: all var(--duration-fast);
+                display: flex;
+                flex-direction: column;
               }
 
               .pricing-tier.popular {
@@ -358,8 +361,8 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
               }
 
               .tier-credits {
-                margin: 0 0 8px;
-                font-size: 0.9375rem;
+                margin: 0 0 12px;
+                font-size: 1rem;
                 color: var(--ink-secondary);
               }
 
@@ -378,6 +381,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
                 font-size: 0.875rem;
                 color: var(--ink-tertiary);
                 margin: 0 0 16px;
+                flex-grow: 1;
               }
 
               .savings-badge {

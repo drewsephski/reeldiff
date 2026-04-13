@@ -21,6 +21,9 @@ export function Navbar({ onBuyCredits }: NavbarProps) {
         </div>
 
         <div className="nav-actions">
+          <button className="pricing-link" onClick={onBuyCredits}>
+            Pricing
+          </button>
           <ThemeToggle />
           {isSignedIn ? (
             <>
@@ -71,6 +74,21 @@ export function Navbar({ onBuyCredits }: NavbarProps) {
           display: flex;
           align-items: center;
           gap: 0.75rem;
+        }
+
+        .pricing-link {
+          padding: 0.5rem 1rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--ink-secondary);
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .pricing-link:hover {
+          color: var(--accent);
         }
 
         .sign-in-btn {

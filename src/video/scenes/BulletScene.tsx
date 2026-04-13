@@ -8,6 +8,7 @@ import { LayoutF } from '../layouts/LayoutF';
 import { LayoutG } from '../layouts/LayoutG';
 import { LayoutH } from '../layouts/LayoutH';
 import { enhancedSprings } from '../enhancedAnimations';
+import { usePerspectiveTilt, useOrbitingSparks } from '../cinematicEffects';
 import { colors, spacing, radius } from '../designSystem';
 
 interface BulletSceneProps {
@@ -99,6 +100,12 @@ export const BulletScene: React.FC<BulletSceneProps> = ({
   // Calculate scene position (0-indexed after intro and headline)
   const sceneIndex = index + 2;
 
+  // 3D perspective tilt for depth
+  const perspectiveTilt = usePerspectiveTilt(0);
+
+  // Orbiting sparks for dynamic background
+  const orbitingSparks = useOrbitingSparks(6, 250, 1.2, 60);
+
   return (
     <AbsoluteFill
       style={{
@@ -115,6 +122,34 @@ export const BulletScene: React.FC<BulletSceneProps> = ({
       {/* Floating particles */}
       <FloatingParticles frame={frame} fps={fps} accentColor={accentColor} />
 
+      {/* Orbiting sparks background */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          pointerEvents: 'none',
+          zIndex: 5,
+        }}
+      >
+        {orbitingSparks.map((spark, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              width: spark.size,
+              height: spark.size,
+              borderRadius: '50%',
+              backgroundColor: accentColor,
+              transform: `translate(${spark.x}px, ${spark.y}px) scale(${spark.scale})`,
+              opacity: spark.opacity * 0.6,
+              boxShadow: `0 0 ${spark.size * 2}px ${accentColor}`,
+            }}
+          />
+        ))}
+      </div>
+
       {/* Vignette overlay */}
       <div
         style={{
@@ -125,8 +160,8 @@ export const BulletScene: React.FC<BulletSceneProps> = ({
         }}
       />
 
-      {/* Main layout */}
-      <div style={{ zIndex: 10, width: '100%', display: 'flex', justifyContent: 'center' }}>
+      {/* Main layout with 3D perspective */}
+      <div style={{ zIndex: 10, width: '100%', display: 'flex', justifyContent: 'center', transform: perspectiveTilt.transform }}>
         <Layout text={text} accentColor={accentColor} />
       </div>
 

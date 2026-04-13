@@ -7,6 +7,7 @@ import {
   Easing,
 } from 'remotion';
 import { springs } from '../animations';
+import { useFireworkBurst, usePerspectiveTilt, usePhysicsParticles } from '../cinematicEffects';
 import { typography, colors, spacing, radius } from '../designSystem';
 
 interface OutroSceneProps {
@@ -247,6 +248,26 @@ export const OutroScene: React.FC<OutroSceneProps> = ({
   });
   const exitOpacity = interpolate(exitProgress, [0, 1], [1, 0]);
 
+  // 3D perspective tilt for depth
+  const perspectiveTilt = usePerspectiveTilt(0);
+
+  // Firework burst celebration at frame 30
+  const fireworks = useFireworkBurst(30, 40, [
+    accentColor,
+    colors.semantic.success,
+    '#f4a261',
+    '#e9c46a',
+    '#b48ead',
+  ]);
+
+  // Physics particles for background effect
+  const physicsParticles = usePhysicsParticles(12, accentColor, {
+    gravity: 0.12,
+    friction: 0.98,
+    turbulence: 0.06,
+    spawnRate: 10,
+  });
+
   // Stats configuration
   const stats = [
     { value: filesChanged, label: 'Files Changed', color: colors.text.tertiary, delay: 10 },
@@ -274,17 +295,73 @@ export const OutroScene: React.FC<OutroSceneProps> = ({
         }}
       />
 
+      {/* Firework burst celebration */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          pointerEvents: 'none',
+          zIndex: 8,
+        }}
+      >
+        {fireworks.map((fw, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              width: fw.size,
+              height: fw.size,
+              borderRadius: '50%',
+              backgroundColor: fw.color,
+              transform: `translate(${fw.x}px, ${fw.y}px) scale(${fw.scale}) rotate(${fw.rotation}deg)`,
+              opacity: fw.opacity,
+              boxShadow: `0 0 ${fw.size * 2}px ${fw.color}`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Physics particles background */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 6,
+        }}
+      >
+        {physicsParticles.map((p, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              left: p.x,
+              top: p.y,
+              width: p.size,
+              height: p.size,
+              borderRadius: '50%',
+              backgroundColor: p.color,
+              opacity: p.opacity,
+              transform: `scale(${p.scale}) rotate(${p.rotation}deg)`,
+              boxShadow: `0 0 ${p.size * 2}px ${p.color}`,
+            }}
+          />
+        ))}
+      </div>
+
       {/* Celebration particles */}
       <CelebrationParticles frame={frame} fps={fps} accentColor={accentColor} />
 
-      {/* Content container */}
+      {/* Content container with 3D perspective */}
       <div
         style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           gap: spacing.xl,
-          transform: `scale(${exitScale})`,
+          transform: `${perspectiveTilt.transform} scale(${exitScale})`,
           opacity: exitOpacity,
           zIndex: 10,
         }}

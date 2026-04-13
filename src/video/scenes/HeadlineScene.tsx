@@ -6,7 +6,12 @@ import {
   useVideoConfig,
   Easing,
 } from 'remotion';
-import { enhancedSprings, useStaggeredWords, useGlowPulse, useWaveFloat, useSpotlightSweep } from '../enhancedAnimations';
+import { enhancedSprings, useGlowPulse, useWaveFloat } from '../enhancedAnimations';
+import {
+  useEmphasisWords,
+  useOrbitingSparks,
+  usePerspectiveTilt,
+} from '../cinematicEffects';
 import { typography, colors, spacing, radius, toneConfigs, layout } from '../designSystem';
 
 interface HeadlineSceneProps {
@@ -15,30 +20,6 @@ interface HeadlineSceneProps {
   accentColor: string;
   tone: 'celebratory' | 'relief' | 'technical' | 'minor' | 'educational' | 'hype';
 }
-
-// Dynamic spotlight sweep component
-const Spotlight: React.FC<{ accentColor: string; tone: string }> = ({
-  accentColor,
-  tone,
-}) => {
-  const sweep = useSpotlightSweep(10, 100, 'left');
-  const intensity = tone === 'hype' || tone === 'celebratory' ? 0.25 : 0.15;
-
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: `radial-gradient(circle 500px at ${sweep.x}px 50%, ${accentColor}${Math.floor(intensity * 255).toString(16).padStart(2, '0')} 0%, transparent 70%)`,
-        pointerEvents: 'none',
-        opacity: sweep.opacity,
-      }}
-    />
-  );
-};
 
 // Enhanced floating orbs with varied shapes and motion
 const FloatingOrbs: React.FC<{
@@ -196,9 +177,15 @@ export const HeadlineScene: React.FC<HeadlineSceneProps> = ({
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
-  // Split headline into words for staggered animation
+  // Split headline into words for kinetic animation
   const words = headline.split(' ');
-  const staggeredWords = useStaggeredWords(words, 15, 5, 3);
+  const kineticWords = useEmphasisWords(words, 15, 5, 3);
+
+  // 3D perspective tilt for depth
+  const perspectiveTilt = usePerspectiveTilt(0);
+
+  // Orbiting sparks for dynamic background
+  const orbitingSparks = useOrbitingSparks(8, 300, 1.5, 80);
 
   // Get tone configuration
   const toneConfig = toneConfigs[tone] || toneConfigs.celebratory;
@@ -260,9 +247,6 @@ export const HeadlineScene: React.FC<HeadlineSceneProps> = ({
         />
       )}
 
-      {/* Dynamic spotlight sweep */}
-      <Spotlight accentColor={accentColor} tone={tone} />
-
       {/* Top vignette */}
       <div
         style={{
@@ -276,14 +260,42 @@ export const HeadlineScene: React.FC<HeadlineSceneProps> = ({
         }}
       />
 
-      {/* Content container with enhanced animations */}
+      {/* Orbiting sparks background */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          pointerEvents: 'none',
+          zIndex: 5,
+        }}
+      >
+        {orbitingSparks.map((spark, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              width: spark.size,
+              height: spark.size,
+              borderRadius: '50%',
+              backgroundColor: accentColor,
+              transform: `translate(${spark.x}px, ${spark.y}px) scale(${spark.scale})`,
+              opacity: spark.opacity,
+              boxShadow: `0 0 ${spark.size * 3}px ${accentColor}`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Content container with 3D perspective and enhanced animations */}
       <div
         style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           gap: spacing.lg,
-          transform: `translateY(${exitY + waveY}px) scale(${exitScale})`,
+          transform: `${perspectiveTilt.transform} translateY(${exitY + waveY}px) scale(${exitScale})`,
           opacity: exitOpacity,
           zIndex: 10,
           maxWidth: layout.maxContentWidth,
@@ -318,7 +330,7 @@ export const HeadlineScene: React.FC<HeadlineSceneProps> = ({
             margin: 0,
           }}
         >
-          {staggeredWords.map((wordData, i) => (
+          {kineticWords.map((wordData: { word: string; transform: string; opacity: number; isEmphasis: boolean }, i: number) => (
             <span
               key={i}
               style={{
@@ -330,7 +342,7 @@ export const HeadlineScene: React.FC<HeadlineSceneProps> = ({
                   ? `0 0 50px ${accentColor}${Math.floor(glow.intensity * 100).toString(16).padStart(2, '0')}`
                   : 'none',
                 opacity: wordData.opacity,
-                transform: `translateY(${wordData.y}px) scale(${wordData.scale})`,
+                transform: wordData.transform,
                 fontSize: wordData.isEmphasis ? '1.05em' : '1em',
                 transition: 'transform 0.15s ease-out',
               }}

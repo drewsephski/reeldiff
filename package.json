@@ -15,6 +15,7 @@
     "@clerk/nextjs": "^7.0.12",
     "@openrouter/ai-sdk-provider": "^2.5.1",
     "@remotion/animation-utils": "^4.0.448",
+    "@remotion/light-leaks": "^4.0.448",
     "@remotion/player": "^4.0.448",
     "@remotion/transitions": "^4.0.448",
     "@stripe/stripe-js": "^9.1.0",
