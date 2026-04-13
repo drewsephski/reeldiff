@@ -59,12 +59,12 @@ export const PatchPlayComposition: React.FC<VideoScript> = (props) => {
           <CinematicOverlays showFilmGrain={true} showVignette={true} vignetteIntensity={0.3} />
         </TransitionSeries.Sequence>
 
-        {/* Intro to Headline: Light leak overlay */}
-        <TransitionSeries.Overlay durationInFrames={TRANSITION_DURATION + 10}>
+        {/* Intro to Headline: Light leak overlay - temporarily disabled for testing */}
+        {/* <TransitionSeries.Overlay durationInFrames={TRANSITION_DURATION + 10}>
           <div style={{ position: 'absolute', inset: 0 }}>
             <LightLeak seed={0} hueShift={hueShift} />
           </div>
-        </TransitionSeries.Overlay>
+        </TransitionSeries.Overlay> */}
 
         {/* Intro to Headline: Slide from right */}
         <TransitionSeries.Transition
@@ -84,12 +84,12 @@ export const PatchPlayComposition: React.FC<VideoScript> = (props) => {
           <CinematicOverlays showFilmGrain={true} showVignette={true} vignetteIntensity={0.35} />
         </TransitionSeries.Sequence>
 
-        {/* Headline to Bullets: Light leak overlay */}
-        <TransitionSeries.Overlay durationInFrames={TRANSITION_DURATION + 10}>
+        {/* Headline to Bullets: Light leak overlay - temporarily disabled */}
+        {/* <TransitionSeries.Overlay durationInFrames={TRANSITION_DURATION + 10}>
           <div style={{ position: 'absolute', inset: 0 }}>
             <LightLeak seed={1} hueShift={(hueShift + 60) % 360} />
           </div>
-        </TransitionSeries.Overlay>
+        </TransitionSeries.Overlay> */}
 
         {/* Headline to Bullets: Wipe transition */}
         <TransitionSeries.Transition
@@ -109,12 +109,12 @@ export const PatchPlayComposition: React.FC<VideoScript> = (props) => {
           </TransitionSeries.Sequence>
         ))}
 
-        {/* Bullets to Outro: Light leak overlay */}
-        <TransitionSeries.Overlay durationInFrames={TRANSITION_DURATION + 10}>
+        {/* Bullets to Outro: Light leak overlay - temporarily disabled */}
+        {/* <TransitionSeries.Overlay durationInFrames={TRANSITION_DURATION + 10}>
           <div style={{ position: 'absolute', inset: 0 }}>
             <LightLeak seed={2} hueShift={(hueShift + 120) % 360} />
           </div>
-        </TransitionSeries.Overlay>
+        </TransitionSeries.Overlay> */}
 
         {/* Bullets to Outro: Fade transition */}
         <TransitionSeries.Transition
