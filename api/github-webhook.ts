@@ -64,17 +64,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Invalid JSON body" });
   }
 
+  // Validate required fields
+  if (!payload || !payload.action) {
+    console.error("Invalid webhook payload - missing action:", payload);
+    return res.status(400).json({ error: "Invalid webhook payload" });
+  }
+
+  console.log("Parsed webhook payload:", JSON.stringify(payload, null, 2));
+
   // Trigger the Trigger.dev task
   try {
     const { tasks } = await import("@trigger.dev/sdk/v3");
     
-    // Trigger the webhook processing task
-    const result = await tasks.trigger("process-github-webhook", {
+    const taskPayload = {
       action: payload.action,
       pull_request: payload.pull_request,
       repository: payload.repository,
       sender: payload.sender,
-    });
+    };
+    
+    console.log("Triggering task with payload:", JSON.stringify(taskPayload, null, 2));
+    
+    // Trigger the webhook processing task
+    const result = await tasks.trigger("process-github-webhook", taskPayload);
 
     console.log("Triggered process-github-webhook task:", {
       runId: result.id,
