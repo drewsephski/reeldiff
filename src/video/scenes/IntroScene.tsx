@@ -13,6 +13,7 @@ import {
   usePhysicsParticles,
 } from '../cinematicEffects';
 import { typography, colors, spacing, radius } from '../designSystem';
+import { CinematicOverlays } from '../components/CinematicOverlays';
 
 interface IntroSceneProps {
   repoName: string;
@@ -424,16 +425,34 @@ export const IntroScene: React.FC<IntroSceneProps> = ({
                 transform: `scale(${1 + Math.sin(frame * 0.08 + 1) * 0.05}) rotate(${frame * 0.5}deg)`,
               }}
             />
-            <Img
-              src={ownerAvatar}
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: '50%',
-                border: `3px solid ${accentColor}`,
-                boxShadow: `0 12px 48px ${accentColor}50`,
-              }}
-            />
+            {ownerAvatar ? (
+              <Img
+                src={ownerAvatar}
+                style={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: '50%',
+                  border: `3px solid ${accentColor}`,
+                  boxShadow: `0 12px 48px ${accentColor}50`,
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: '50%',
+                  border: `3px solid ${accentColor}`,
+                  backgroundColor: colors.bg.secondary,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 28,
+                }}
+              >
+                👤
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -502,6 +521,9 @@ export const IntroScene: React.FC<IntroSceneProps> = ({
           );
         })}
       </div>
+
+      {/* Cinematic overlays */}
+      <CinematicOverlays showFilmGrain={true} showVignette={true} vignetteIntensity={0.3} />
     </AbsoluteFill>
   );
 };

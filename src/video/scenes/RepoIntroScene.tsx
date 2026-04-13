@@ -241,16 +241,34 @@ export const RepoIntroScene: React.FC<RepoIntroSceneProps> = ({
                 transform: `scale(${1 + Math.sin(frame * 0.08 + 1) * 0.05}) rotate(${frame * 0.3}deg)`,
               }}
             />
-            <Img
-              src={ownerAvatar}
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: '50%',
-                border: `4px solid ${accentColor}`,
-                boxShadow: `0 12px 40px ${accentColor}50`,
-              }}
-            />
+            {ownerAvatar ? (
+              <Img
+                src={ownerAvatar}
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: '50%',
+                  border: `4px solid ${accentColor}`,
+                  boxShadow: `0 12px 40px ${accentColor}50`,
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: '50%',
+                  border: `4px solid ${accentColor}`,
+                  backgroundColor: colors.bg.secondary,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 32,
+                }}
+              >
+                👤
+              </div>
+            )}
           </div>
           <span
             style={{
