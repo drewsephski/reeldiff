@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../src/jobs/index.ts"],
+  "sourcesContent": ["// Export all Trigger.dev tasks\n// These will be automatically discovered by the Trigger.dev CLI\n\nexport { processGitHubWebhook } from \"./github-webhook\";\nexport { generateVideo } from \"./generate-video\";\nexport { distributeVideo } from \"./distribute-video\";\n"],
+  "mappings": ";;;;;;;;;;;;;;;;;;;;AAAA;",
+  "names": []
+}

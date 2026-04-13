@@ -1,0 +1,59 @@
+{
+  "configPath": "/Users/drewsepeczi/patchplay/.trigger/tmp/build-xj7DBz/trigger.config.mjs",
+  "customConditions": [
+  ],
+  "prompts": [
+  ],
+  "queues": [
+  ],
+  "runtime": "node",
+  "runtimeVersion": "24.14.1",
+  "tasks": [
+    {
+      "entryPoint": "/Users/drewsepeczi/patchplay/.trigger/tmp/build-xj7DBz/src/jobs/distribute-video.mjs",
+      "filePath": "src/jobs/distribute-video.ts",
+      "id": "distribute-video",
+      "maxDuration": 600,
+      "retry": {
+        "factor": 1.8,
+        "maxAttempts": 3,
+        "maxTimeoutInMs": 30000,
+        "minTimeoutInMs": 1000,
+        "randomize": true
+      }
+    },
+    {
+      "entryPoint": "/Users/drewsepeczi/patchplay/.trigger/tmp/build-xj7DBz/src/jobs/generate-video.mjs",
+      "filePath": "src/jobs/generate-video.ts",
+      "id": "generate-video",
+      "maxDuration": 600,
+      "retry": {
+        "factor": 1.8,
+        "maxAttempts": 3,
+        "maxTimeoutInMs": 30000,
+        "minTimeoutInMs": 1000,
+        "randomize": true
+      }
+    },
+    {
+      "entryPoint": "/Users/drewsepeczi/patchplay/.trigger/tmp/build-xj7DBz/src/jobs/github-webhook.mjs",
+      "filePath": "src/jobs/github-webhook.ts",
+      "id": "process-github-webhook",
+      "maxDuration": 600,
+      "retry": {
+        "factor": 1.8,
+        "maxAttempts": 3,
+        "maxTimeoutInMs": 30000,
+        "minTimeoutInMs": 1000,
+        "randomize": true
+      }
+    }
+  ],
+  "timings": {
+    "src/jobs/distribute-video.ts": 32.886667000000045,
+    "src/jobs/generate-video.ts": 32.18241699999999,
+    "src/jobs/github-webhook.ts": 1.2032500000000255,
+    "src/jobs/index.ts": 0.4519999999999982
+  },
+  "workerEntryPoint": "/Users/drewsepeczi/patchplay/.trigger/tmp/build-xj7DBz/node_modules/trigger.dev/dist/esm/entryPoints/dev-run-worker.mjs"
+}
