@@ -133,10 +133,9 @@ ${truncatedFiles.map((f: { filename: string; additions: number; deletions: numbe
     });
   } catch (error: unknown) {
     console.error('Handler error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Unknown error',
-      cause: error instanceof Error ? (error.cause as { message?: string; code?: string })?.message : undefined,
-      code: error instanceof Error ? (error.cause as { message?: string; code?: string })?.code : undefined,
+      error: errorMessage,
     });
   }
 }
