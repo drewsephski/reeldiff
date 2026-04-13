@@ -1,34 +1,24 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { kv } from '@vercel/kv';
+import { getAuth } from '@clerk/nextjs/server';
+import { getUserCredits } from './lib/stripe-sync';
 
-interface UserCredits {
-  credits: number;
-  freeUsed: boolean;
-  createdAt: string;
-}
-
+/**
+ * GET /api/credits
+ * Get current user's credit balance (requires Clerk auth)
+ */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { fingerprint } = req.query;
-
-  if (!fingerprint || typeof fingerprint !== 'string') {
-    return res.status(400).json({ error: 'fingerprint is required' });
-  }
-
   try {
-    const key = `user:${fingerprint}`;
-    const userData = await kv.get<UserCredits>(key);
+    const { userId } = getAuth(req);
 
-    if (!userData) {
-      // New user - return default with free credit available
-      return res.status(200).json({
-        credits: 0,
-        freeUsed: false,
-      });
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
+
+    const userData = await getUserCredits(userId);
 
     return res.status(200).json({
       credits: userData.credits,

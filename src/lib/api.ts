@@ -1,15 +1,24 @@
 import type { VideoScript, RepoVideoScript } from '../types';
-import { getDeviceFingerprint } from './fingerprint';
 
-export async function analyzePR(prUrl: string): Promise<VideoScript> {
+export async function analyzePR(
+  prUrl: string,
+  getToken: () => Promise<string | null>
+): Promise<VideoScript> {
   let response: Response;
-  const fingerprint = getDeviceFingerprint();
+  const token = await getToken();
+
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
 
   try {
     response = await fetch('/api/analyze', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prUrl, fingerprint }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ prUrl }),
     });
   } catch {
     throw new Error('Network error - please check your connection');
@@ -34,15 +43,25 @@ export async function analyzePR(prUrl: string): Promise<VideoScript> {
   }
 }
 
-export async function analyzeRepo(repoUrl: string): Promise<RepoVideoScript> {
+export async function analyzeRepo(
+  repoUrl: string,
+  getToken: () => Promise<string | null>
+): Promise<RepoVideoScript> {
   let response: Response;
-  const fingerprint = getDeviceFingerprint();
+  const token = await getToken();
+
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
 
   try {
     response = await fetch('/api/analyze-repo', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ repoUrl, fingerprint }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ repoUrl }),
     });
   } catch {
     throw new Error('Network error - please check your connection');

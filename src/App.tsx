@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import { InputForm } from './components/InputForm';
 import { LoadingState } from './components/LoadingState';
 import { VideoModal } from './components/VideoModal';
@@ -19,21 +20,25 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Clerk auth
+  const { getToken, isSignedIn } = useAuth();
+
   // Credit system state
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
 
   // Load credits on mount and after successful purchase
   const loadCredits = useCallback(async () => {
+    if (!isSignedIn) return;
     try {
-      await getCredits();
+      await getCredits(getToken);
       // CreditDisplay component will reload itself via global function
       const reloadFn = (window as Window & { reloadCredits?: () => void }).reloadCredits;
       if (reloadFn) reloadFn();
     } catch (err) {
       console.error('Failed to load credits:', err);
     }
-  }, []);
+  }, [getToken, isSignedIn]);
 
   // Initial load
   useEffect(() => {
@@ -52,10 +57,16 @@ function App() {
   }, [loadCredits]);
 
   const handleSubmit = async (url: string, mode: InputMode) => {
+    // Check auth first
+    if (!isSignedIn) {
+      setError('Please sign in to generate videos.');
+      return;
+    }
+
     // Check credits first
     let currentCredits: { credits: number; freeUsed: boolean };
     try {
-      currentCredits = await getCredits();
+      currentCredits = await getCredits(getToken);
     } catch {
       setError('Failed to check credits. Please try again.');
       return;
@@ -70,11 +81,11 @@ function App() {
     setError(null);
 
     try {
-      const data = mode === 'pr' ? await analyzePR(url) : await analyzeRepo(url);
+      const data = mode === 'pr' ? await analyzePR(url, getToken) : await analyzeRepo(url, getToken);
 
       // Deduct credit after successful generation
       try {
-        await deductCredit();
+        await deductCredit(getToken);
         // Reload credits to update UI
         await loadCredits();
       } catch (deductErr) {

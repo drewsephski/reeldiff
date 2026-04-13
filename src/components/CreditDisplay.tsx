@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import { getCredits, getEffectiveCredits, type CreditInfo } from '../lib/credits';
 
 interface CreditDisplayProps {
@@ -8,14 +9,12 @@ interface CreditDisplayProps {
 export const CreditDisplay: React.FC<CreditDisplayProps> = ({ onBuyCredits }) => {
   const [creditInfo, setCreditInfo] = useState<CreditInfo | null>(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadCredits();
-  }, []);
+  const { getToken, isSignedIn } = useAuth();
 
   const loadCredits = async () => {
+    if (!isSignedIn) return;
     try {
-      const info = await getCredits();
+      const info = await getCredits(getToken);
       setCreditInfo(info);
     } catch (error) {
       console.error('Failed to load credits:', error);
@@ -24,12 +23,18 @@ export const CreditDisplay: React.FC<CreditDisplayProps> = ({ onBuyCredits }) =>
     }
   };
 
+  useEffect(() => {
+    loadCredits();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSignedIn]);
+
   // Expose reload method globally for other components
   useEffect(() => {
     (window as Window & { reloadCredits?: () => void }).reloadCredits = loadCredits;
     return () => {
       delete (window as Window & { reloadCredits?: () => void }).reloadCredits;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {

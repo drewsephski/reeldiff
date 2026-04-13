@@ -1,35 +1,54 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { getAuth } from '@clerk/nextjs/server';
 import Stripe from 'stripe';
+import { getOrCreateStripeCustomer } from '../lib/stripe-sync';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2026-03-25.dahlia',
 });
 
+/**
+ * POST /api/stripe/checkout
+ * Create Stripe checkout session for credit purchase (requires Clerk auth)
+ * Following STRIPE.md pattern - always create customer before checkout
+ */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { fingerprint, tier } = req.body;
-
-  if (!fingerprint || typeof fingerprint !== 'string') {
-    return res.status(400).json({ error: 'fingerprint is required' });
-  }
-
-  if (!tier || !['starter', 'pro'].includes(tier)) {
-    return res.status(400).json({ error: 'tier must be "starter" or "pro"' });
-  }
-
-  const priceId = tier === 'starter'
-    ? process.env.PRICE_STARTER
-    : process.env.PRICE_PRO;
-
-  if (!priceId) {
-    return res.status(500).json({ error: 'Price ID not configured' });
-  }
-
   try {
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Get user info from Clerk (we need email)
+    // In production, fetch from Clerk API or include in request body
+    const { tier, email } = req.body;
+
+    if (!tier || !['starter', 'pro'].includes(tier)) {
+      return res.status(400).json({ error: 'tier must be "starter" or "pro"' });
+    }
+
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: 'email is required' });
+    }
+
+    const priceId = tier === 'starter'
+      ? process.env.PRICE_STARTER
+      : process.env.PRICE_PRO;
+
+    if (!priceId) {
+      return res.status(500).json({ error: 'Price ID not configured' });
+    }
+
+    // STRIPE.md pattern: ALWAYS create customer before checkout
+    const stripeCustomerId = await getOrCreateStripeCustomer(userId, email);
+
     const session = await stripe.checkout.sessions.create({
+      customer: stripeCustomerId,
       line_items: [
         {
           price: priceId,
@@ -37,10 +56,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
       ],
       mode: 'payment',
-      success_url: `${req.headers.origin || 'http://localhost:5173'}/?success=true&tier=${tier}`,
+      success_url: `${req.headers.origin || 'http://localhost:5173'}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.origin || 'http://localhost:5173'}/?canceled=true`,
       metadata: {
-        fingerprint,
+        userId,
         tier,
       },
     });

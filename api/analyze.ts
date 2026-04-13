@@ -3,15 +3,10 @@ import { config } from 'dotenv';
 import { generateText, Output } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { z } from 'zod';
-import { kv } from '@vercel/kv';
+import { getAuth } from '@clerk/nextjs/server';
+import { getUserCredits, hasCredits as checkCredits } from './lib/stripe-sync';
 
 config({ path: '.env.local' });
-
-interface UserCredits {
-  credits: number;
-  freeUsed: boolean;
-  createdAt: string;
-}
 
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
@@ -38,19 +33,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { prUrl, fingerprint } = req.body;
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { prUrl } = req.body;
     if (!prUrl || typeof prUrl !== 'string') {
       return res.status(400).json({ error: 'prUrl is required' });
     }
-    if (!fingerprint || typeof fingerprint !== 'string') {
-      return res.status(400).json({ error: 'fingerprint is required' });
-    }
 
-    // Check credits
-    const userKey = `user:${fingerprint}`;
-    const userData = await kv.get<UserCredits>(userKey);
+    // Check credits using Clerk userId
+    const userData = await getUserCredits(userId);
 
-    if (userData && userData.freeUsed && userData.credits <= 0) {
+    if (!checkCredits(userData)) {
       return res.status(403).json({
         error: 'No credits remaining. Please purchase more credits to continue.',
         code: 'INSUFFICIENT_CREDITS',

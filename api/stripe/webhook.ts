@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
-import { kv } from '@vercel/kv';
+import { addCredits, syncStripeDataToKV } from '../lib/stripe-sync';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2026-03-25.dahlia',
@@ -8,17 +8,20 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
-interface UserCredits {
-  credits: number;
-  freeUsed: boolean;
-  createdAt: string;
-}
+// STRIPE.md: Events we track for credit purchases
+const allowedEvents: Stripe.Event.Type[] = [
+  'checkout.session.completed',
+  'payment_intent.succeeded',
+  'payment_intent.payment_failed',
+];
 
-const CREDITS_BY_TIER: Record<string, number> = {
-  starter: 5,
-  pro: 20,
-};
-
+/**
+ * POST /api/stripe/webhook
+ * Handle Stripe webhooks following STRIPE.md pattern
+ * - Verify signature
+ * - Process allowed events
+ * - Sync data to KV
+ */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -40,60 +43,54 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Invalid signature' });
   }
 
-  // Handle successful payment
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session;
-
-    const fingerprint = session.metadata?.fingerprint;
-    const tier = session.metadata?.tier;
-
-    if (!fingerprint || !tier) {
-      console.error('Missing metadata in session:', session.id);
-      return res.status(400).json({ error: 'Missing metadata' });
-    }
-
-    const creditsToAdd = CREDITS_BY_TIER[tier];
-    if (!creditsToAdd) {
-      console.error('Unknown tier:', tier);
-      return res.status(400).json({ error: 'Unknown tier' });
-    }
-
-    try {
-      const key = `user:${fingerprint}`;
-      const userData = await kv.get<UserCredits>(key);
-
-      if (userData) {
-        // Update existing user
-        userData.credits += creditsToAdd;
-        await kv.set(key, userData);
-      } else {
-        // Create new user with credits
-        const newUser: UserCredits = {
-          credits: creditsToAdd,
-          freeUsed: false,
-          createdAt: new Date().toISOString(),
-        };
-        await kv.set(key, newUser);
-      }
-
-      // Store purchase record
-      const purchaseKey = `purchase:${session.payment_intent}`;
-      await kv.set(purchaseKey, {
-        fingerprint,
-        tier,
-        credits: creditsToAdd,
-        amount: session.amount_total,
-        createdAt: new Date().toISOString(),
-      });
-
-      console.log(`Added ${creditsToAdd} credits to ${fingerprint}`);
-      return res.status(200).json({ received: true });
-    } catch (error) {
-      console.error('Error adding credits:', error);
-      return res.status(500).json({ error: 'Failed to add credits' });
-    }
+  // STRIPE.md pattern: Only process events we care about
+  if (!allowedEvents.includes(event.type)) {
+    return res.status(200).json({ received: true });
   }
 
-  // Acknowledge other events
-  return res.status(200).json({ received: true });
+  try {
+    await processEvent(event);
+    return res.status(200).json({ received: true });
+  } catch (error) {
+    console.error('Error processing webhook:', error);
+    return res.status(500).json({ error: 'Failed to process webhook' });
+  }
 }
+
+async function processEvent(event: Stripe.Event): Promise<void> {
+  // STRIPE.md: All events we track have customer info
+  const session = event.data.object as Stripe.Checkout.Session;
+  const stripeCustomerId = session.customer as string;
+
+  if (typeof stripeCustomerId !== 'string') {
+    throw new Error(`[STRIPE HOOK] Customer ID isn't string. Event type: ${event.type}`);
+  }
+
+  // Handle checkout.session.completed - add credits
+  if (event.type === 'checkout.session.completed') {
+    const userId = session.metadata?.userId;
+    const tier = session.metadata?.tier;
+
+    if (!userId || !tier) {
+      throw new Error(`[STRIPE HOOK] Missing metadata in session: ${session.id}`);
+    }
+
+    // STRIPE.md pattern: Sync data first
+    await syncStripeDataToKV(stripeCustomerId, userId);
+
+    // Add credits to user
+    await addCredits(userId, tier);
+
+    console.log(`[STRIPE HOOK] Added credits for user ${userId}, tier ${tier}`);
+  }
+
+  // For other events, just sync the data
+  // (in a subscription model we'd update status, but for credits we just need the purchase)
+}
+
+// Disable body parsing for Stripe signature verification
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};

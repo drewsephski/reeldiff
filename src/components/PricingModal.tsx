@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getDeviceFingerprint } from '../lib/fingerprint';
+import { useAuth, useUser } from '@clerk/clerk-react';
 
 interface PricingModalProps {
   isOpen: boolean;
@@ -30,17 +30,31 @@ const TIERS = [
 export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { getToken } = useAuth();
+  const { user } = useUser();
 
   const handlePurchase = async (tier: string) => {
     setLoading(tier);
     setError(null);
 
     try {
-      const fingerprint = getDeviceFingerprint();
+      const token = await getToken();
+      const email = user?.primaryEmailAddress?.emailAddress;
+
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+      if (!email) {
+        throw new Error('Email required for checkout');
+      }
+
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fingerprint, tier }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ tier, email }),
       });
 
       const data = await response.json();
