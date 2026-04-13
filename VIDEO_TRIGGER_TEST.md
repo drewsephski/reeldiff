@@ -15,3 +15,4 @@ This file was created to test the automated video generation feature.
 5. Video generation task triggered
 6. Video appears in dashboard with GitHub badge
 # Test Merge 2 - Mon Apr 13 18:04:28 CDT 2026
+# Test Merge 3 - Debug webhook - Mon Apr 13 18:06:04 CDT 2026
