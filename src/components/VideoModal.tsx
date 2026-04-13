@@ -2,11 +2,13 @@ import { useEffect, useCallback } from 'react';
 import type { ComponentType } from 'react';
 import { Player } from '@remotion/player';
 import { PatchPlayComposition } from '../video/Composition';
+import { RepoComposition } from '../video/RepoComposition';
 import { calculateDuration } from '../video/durations';
-import type { VideoScript } from '../types';
+import type { VideoData } from '../types';
+import { isRepoVideoScript } from '../types';
 
 interface VideoModalProps {
-  videoData: VideoScript;
+  videoData: VideoData;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -51,7 +53,11 @@ export function VideoModal({ videoData, isOpen, onClose }: VideoModalProps) {
         {/* Video container */}
         <div className="video-container">
           <Player
-            component={PatchPlayComposition as unknown as ComponentType<Record<string, unknown>>}
+            component={(
+              isRepoVideoScript(videoData) 
+                ? RepoComposition 
+                : PatchPlayComposition
+            ) as unknown as ComponentType<Record<string, unknown>>}
             inputProps={videoData as unknown as Record<string, unknown>}
             durationInFrames={calculateDuration(videoData.summary.bullets.length)}
             compositionWidth={1920}
@@ -70,7 +76,10 @@ export function VideoModal({ videoData, isOpen, onClose }: VideoModalProps) {
         <div className="video-meta">
           <span className="text-caption-accent">Generated video</span>
           <span className="text-small">
-            {videoData.meta.repoName} · PR #{videoData.meta.prNumber}
+            {videoData.meta.repoName}
+            {isRepoVideoScript(videoData) 
+              ? ` · ⭐ ${videoData.meta.stars.toLocaleString()} stars` 
+              : ` · PR #${videoData.meta.prNumber}`}
           </span>
         </div>
       </div>

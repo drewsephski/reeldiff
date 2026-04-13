@@ -3,11 +3,11 @@ import { TransitionSeries, linearTiming, springTiming } from '@remotion/transiti
 import { fade } from '@remotion/transitions/fade';
 import { slide } from '@remotion/transitions/slide';
 import { wipe } from '@remotion/transitions/wipe';
-import type { VideoScript } from '../types';
-import { IntroScene } from './scenes/IntroScene';
+import type { RepoVideoScript } from '../types';
+import { RepoIntroScene } from './scenes/RepoIntroScene';
 import { HeadlineScene } from './scenes/HeadlineScene';
 import { BulletScene } from './scenes/BulletScene';
-import { OutroScene } from './scenes/OutroScene';
+import { RepoOutroScene } from './scenes/RepoOutroScene';
 import {
   INTRO_DURATION,
   HEADLINE_DURATION,
@@ -16,8 +16,11 @@ import {
   TRANSITION_DURATION,
 } from './durations';
 
-export const PatchPlayComposition: React.FC<VideoScript> = (props) => {
+export const RepoComposition: React.FC<RepoVideoScript> = (props) => {
   const { meta, summary, style } = props;
+
+  // Map repo tone to headline tone (HeadlineScene supports superset)
+  const headlineTone = style.tone as 'celebratory' | 'educational' | 'hype' | 'technical';
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#1a1a2e' }}>
@@ -25,11 +28,12 @@ export const PatchPlayComposition: React.FC<VideoScript> = (props) => {
         {/* Intro Scene */}
         <TransitionSeries.Sequence durationInFrames={INTRO_DURATION}>
           <Audio src="/audio/whoosh.mp3" volume={0.6} />
-          <IntroScene
+          <RepoIntroScene
             repoName={meta.repoName}
-            prNumber={meta.prNumber}
-            author={meta.author}
+            owner={meta.owner}
             ownerAvatar={meta.ownerAvatar}
+            stars={meta.stars}
+            forks={meta.forks}
             accentColor={style.accentColor}
           />
         </TransitionSeries.Sequence>
@@ -47,7 +51,7 @@ export const PatchPlayComposition: React.FC<VideoScript> = (props) => {
             headline={summary.headline}
             emoji={summary.emoji}
             accentColor={style.accentColor}
-            tone={style.tone}
+            tone={headlineTone}
           />
         </TransitionSeries.Sequence>
 
@@ -77,11 +81,11 @@ export const PatchPlayComposition: React.FC<VideoScript> = (props) => {
         {/* Outro Scene */}
         <TransitionSeries.Sequence durationInFrames={OUTRO_DURATION}>
           <Audio src="/audio/chime.mp3" volume={0.5} />
-          <OutroScene
+          <RepoOutroScene
             repoName={meta.repoName}
-            filesChanged={meta.filesChanged}
-            additions={meta.additions}
-            deletions={meta.deletions}
+            language={meta.language}
+            topics={meta.topics}
+            stars={meta.stars}
             accentColor={style.accentColor}
           />
         </TransitionSeries.Sequence>

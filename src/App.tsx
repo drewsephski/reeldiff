@@ -2,23 +2,25 @@ import { useState } from 'react';
 import { InputForm } from './components/InputForm';
 import { LoadingState } from './components/LoadingState';
 import { VideoModal } from './components/VideoModal';
-import { analyzePR } from './lib/api';
-import type { VideoScript } from './types';
+import { analyzePR, analyzeRepo } from './lib/api';
+import type { VideoData } from './types';
+import { isRepoVideoScript } from './types';
 
 type AppState = 'input' | 'loading' | 'preview';
+type InputMode = 'pr' | 'repo';
 
 function App() {
   const [state, setState] = useState<AppState>('input');
-  const [videoData, setVideoData] = useState<VideoScript | null>(null);
+  const [videoData, setVideoData] = useState<VideoData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleSubmit = async (url: string) => {
+  const handleSubmit = async (url: string, mode: InputMode) => {
     setState('loading');
     setError(null);
 
     try {
-      const data = await analyzePR(url);
+      const data = mode === 'pr' ? await analyzePR(url) : await analyzeRepo(url);
       setVideoData(data);
       setState('preview');
       setIsModalOpen(true);
@@ -59,13 +61,12 @@ function App() {
                 <span className="text-display-italic">into visual stories</span>
               </h1>
               <p className="text-lead hero-subtitle">
-                Paste a GitHub PR link. Get a shareable video in seconds.
+                Paste a GitHub PR or repo link. Get a shareable video in seconds.
               </p>
             </div>
 
             <div className="form-wrapper animate-reveal-delay-1">
               <InputForm onSubmit={handleSubmit} isLoading={false} />
-
               {error && (
                 <div className="error-message animate-fade">
                   {error}
@@ -85,13 +86,13 @@ function App() {
               onClose={() => setIsModalOpen(false)}
             />
 
-            {!isModalOpen && (
+            {!isModalOpen && videoData && (
               <div className="result-section animate-reveal">
                 <div className="result-card card">
                   <div className="result-header">
                     <img
-                      src={videoData.meta.authorAvatar}
-                      alt={videoData.meta.author}
+                      src={videoData.meta.ownerAvatar}
+                      alt={isRepoVideoScript(videoData) ? videoData.meta.owner : videoData.meta.author}
                       className="avatar"
                     />
                     <div className="result-meta">
@@ -99,7 +100,11 @@ function App() {
                         {videoData.meta.repoName}
                       </span>
                       <span className="text-label">
-                        PR #{videoData.meta.prNumber} by @{videoData.meta.author}
+                        {isRepoVideoScript(videoData) ? (
+                          <>⭐ {videoData.meta.stars.toLocaleString()} stars · {videoData.meta.language}</>
+                        ) : (
+                          <>PR #{videoData.meta.prNumber} by @{videoData.meta.author}</>
+                        )}
                       </span>
                     </div>
                   </div>
@@ -119,7 +124,7 @@ function App() {
                       onClick={handleReset}
                       className="btn-secondary"
                     >
-                      Try another PR
+                      Try another
                     </button>
                   </div>
                 </div>

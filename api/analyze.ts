@@ -72,7 +72,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       prNumber: parsed.number,
       prTitle: pr.title,
       author: pr.user.login,
-      authorAvatar: pr.user.avatar_url,
+      ownerAvatar: pr.user.avatar_url,
       filesChanged: pr.changed_files,
       additions: pr.additions,
       deletions: pr.deletions,

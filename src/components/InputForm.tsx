@@ -1,32 +1,39 @@
 import { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
+
+type InputMode = 'pr' | 'repo';
 
 interface InputFormProps {
-  onSubmit: (url: string) => void;
+  onSubmit: (url: string, mode: InputMode) => void;
   isLoading: boolean;
 }
 
-const examples = [
+const prExamples = [
   { label: 'shadcn-ui/ui', url: 'https://github.com/shadcn-ui/ui/pull/9156' },
   { label: 'oven-sh/bun', url: 'https://github.com/oven-sh/bun/pull/7748' },
   { label: 'anthropics/python', url: 'https://github.com/anthropics/anthropic-sdk-python/pull/1086' },
   { label: 'pi-mono/process-cleanup', url: 'https://github.com/badlogic/pi-mono/pull/3056' },
-  { label: 'pi-mono/local-llm', url: 'https://github.com/badlogic/pi-mono/pull/3081' },
-  { label: 'pi-mono/npm-optimize', url: 'https://github.com/badlogic/pi-mono/pull/3063' },
-  { label: 'clawrouter/routing-fix', url: 'https://github.com/BlockRunAI/ClawRouter/pull/149' },
-  { label: 'clawrouter/wallet-config', url: 'https://github.com/BlockRunAI/ClawRouter/pull/140' },
+];
+
+const repoExamples = [
+  { label: 'facebook/react', url: 'https://github.com/facebook/react' },
+  { label: 'oven-sh/bun', url: 'https://github.com/oven-sh/bun' },
+  { label: 'shadcn-ui/ui', url: 'https://github.com/shadcn-ui/ui' },
+  { label: 'microsoft/vscode', url: 'https://github.com/microsoft/vscode' },
 ];
 
 export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
   const [url, setUrl] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [mode, setMode] = useState<InputMode>('pr');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const isValid = url.trim().includes('github.com') && url.includes('/pull/');
+  const isValid = url.trim().includes('github.com') && (mode === 'pr' ? url.includes('/pull/') : !url.includes('/pull/'));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isValid) {
-      onSubmit(url.trim());
+      onSubmit(url.trim(), mode);
     }
   };
 
@@ -35,8 +42,75 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => 
     inputRef.current?.focus();
   };
 
+  const handleModeChange = (newMode: InputMode) => {
+    setMode(newMode);
+    setUrl(''); // Clear URL when switching modes
+  };
+
+  const examples = mode === 'pr' ? prExamples : repoExamples;
+
   return (
     <form onSubmit={handleSubmit} className="input-form">
+      {/* Mode Toggle with Animated Background */}
+      <div className="mode-toggle">
+        <motion.div
+          className="mode-toggle-bg"
+          initial={false}
+          animate={{
+            x: mode === 'pr' ? 0 : '100%',
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 400,
+            damping: 30,
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => handleModeChange('pr')}
+          className={`mode-btn ${mode === 'pr' ? 'active' : ''}`}
+        >
+          <motion.svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            animate={{ scale: mode === 'pr' ? 1.1 : 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          >
+            <path d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5.085V4.122A2.25 2.25 0 001.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v5.628a2.251 2.251 0 101.5 0V5A2.5 2.5 0 0011 2.5zm1 10.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0zM3.75 12a.75.75 0 100 1.5.75.75 0 000-1.5z"/>
+          </motion.svg>
+          <motion.span
+            animate={{ y: mode === 'pr' ? 0 : 2 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          >
+            Pull Request
+          </motion.span>
+        </button>
+        <button
+          type="button"
+          onClick={() => handleModeChange('repo')}
+          className={`mode-btn ${mode === 'repo' ? 'active' : ''}`}
+        >
+          <motion.svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            animate={{ scale: mode === 'repo' ? 1.1 : 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          >
+            <path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8zM5 12.25v3.25a.25.25 0 00.4.2l1.3-1.2 1.3 1.2a.25.25 0 00.4-.2v-3.25a.25.25 0 00-.25-.25h-2.5a.25.25 0 00-.25.25z"/>
+          </motion.svg>
+          <motion.span
+            animate={{ y: mode === 'repo' ? 0 : 2 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          >
+            Repository
+          </motion.span>
+        </button>
+      </div>
+
       <div className={`input-wrapper ${isFocused ? 'focused' : ''}`}>
         <div className="input-inner">
           <svg
@@ -56,7 +130,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => 
             onChange={(e) => setUrl(e.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            placeholder="github.com/owner/repo/pull/123"
+            placeholder={mode === 'pr' ? 'github.com/owner/repo/pull/123' : 'github.com/owner/repo'}
             disabled={isLoading}
             className="url-input"
           />
@@ -80,12 +154,12 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => 
 
       {url.trim() && !isValid && (
         <p className="validation-hint">
-          Enter a valid GitHub PR URL
+          Enter a valid GitHub {mode === 'pr' ? 'PR URL' : 'repository URL'}
         </p>
       )}
 
       <div className="examples">
-        <span className="examples-label">Try:</span>
+        <span className="examples-label">{mode === 'pr' ? 'Try PRs:' : 'Try repos:'}</span>
         <div className="example-pills">
           {examples.map((example) => (
             <button
@@ -237,6 +311,54 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => 
           color: var(--ink-primary);
           background: var(--bg-tertiary);
           border-color: var(--border-strong);
+        }
+
+        .mode-toggle {
+          display: flex;
+          gap: var(--space-1);
+          padding: 4px;
+          background: var(--bg-secondary);
+          border-radius: 12px;
+          width: fit-content;
+          position: relative;
+        }
+
+        .mode-toggle-bg {
+          position: absolute;
+          top: 4px;
+          left: 4px;
+          width: calc(50% - 4px);
+          height: calc(100% - 8px);
+          background: var(--bg-primary);
+          border-radius: 10px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          z-index: 0;
+        }
+
+        .mode-btn {
+          display: flex;
+          align-items: center;
+          gap: var(--space-2);
+          padding: var(--space-2) var(--space-4);
+          font-family: var(--font-body);
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--ink-muted);
+          background: transparent;
+          border: none;
+          border-radius: 10px;
+          cursor: pointer;
+          position: relative;
+          z-index: 1;
+          transition: color var(--duration-fast) var(--ease-out-quart);
+        }
+
+        .mode-btn.active {
+          color: var(--ink-primary);
+        }
+
+        .mode-btn:hover:not(.active) {
+          color: var(--ink-secondary);
         }
 
         @media (max-width: 640px) {

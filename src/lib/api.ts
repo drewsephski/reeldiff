@@ -1,4 +1,4 @@
-import type { VideoScript } from '../types';
+import type { VideoScript, RepoVideoScript } from '../types';
 
 export async function analyzePR(prUrl: string): Promise<VideoScript> {
   let response: Response;
@@ -20,6 +20,37 @@ export async function analyzePR(prUrl: string): Promise<VideoScript> {
       errorMessage = error.error || errorMessage;
     } catch {
       // Response wasn't valid JSON, use status text
+      errorMessage = response.statusText || errorMessage;
+    }
+    throw new Error(errorMessage);
+  }
+
+  try {
+    return await response.json();
+  } catch {
+    throw new Error('Invalid response from server');
+  }
+}
+
+export async function analyzeRepo(repoUrl: string): Promise<RepoVideoScript> {
+  let response: Response;
+
+  try {
+    response = await fetch('/api/analyze-repo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ repoUrl }),
+    });
+  } catch {
+    throw new Error('Network error - please check your connection');
+  }
+
+  if (!response.ok) {
+    let errorMessage = 'Failed to analyze repository';
+    try {
+      const error = await response.json();
+      errorMessage = error.error || errorMessage;
+    } catch {
       errorMessage = response.statusText || errorMessage;
     }
     throw new Error(errorMessage);
