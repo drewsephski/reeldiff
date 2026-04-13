@@ -20,8 +20,20 @@ async function getRawBody(req: VercelRequest): Promise<Buffer> {
 
 // This endpoint receives GitHub webhooks and triggers Trigger.dev tasks
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  console.log("[WEBHOOK] Received request:", {
+    method: req.method,
+    url: req.url,
+    headers: {
+      "content-type": req.headers["content-type"],
+      "x-github-event": req.headers["x-github-event"],
+      "x-github-delivery": req.headers["x-github-delivery"],
+      "x-hub-signature-256": req.headers["x-hub-signature-256"] ? "present" : "missing",
+    },
+  });
+
   // Only accept POST requests
   if (req.method !== "POST") {
+    console.log("[WEBHOOK] Rejected: method not allowed", req.method);
     return res.status(405).json({ error: "Method not allowed" });
   }
 
