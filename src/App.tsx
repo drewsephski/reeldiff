@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { InputForm } from './components/InputForm';
 import { LoadingState } from './components/LoadingState';
 import { VideoModal } from './components/VideoModal';
-import { CreditDisplay } from './components/CreditDisplay';
+import { Navbar } from './components/Navbar';
 import { PricingModal } from './components/PricingModal';
 import { PaywallModal } from './components/PaywallModal';
 import { analyzePR, analyzeRepo } from './lib/api';
@@ -104,23 +104,10 @@ function App() {
   };
 
   return (
-    <div className="app-container">
-      {/* Header */}
-      <header className="app-header animate-reveal">
-        <div className="logo-mark">
-          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="32" height="32" rx="8" fill="var(--accent)"/>
-            <path d="M10 12h12M10 16h8M10 20h5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          <span className="logo-text">ReelDiff</span>
-        </div>
-        <div className="header-actions">
-          <CreditDisplay onBuyCredits={() => setIsPricingOpen(true)} />
-        </div>
-      </header>
+    <div className="app">
+      <Navbar onBuyCredits={() => setIsPricingOpen(true)} />
 
-      {/* Main content */}
-      <main className="app-main">
+      <main className="main">
         {state === 'input' && (
           <div className="input-section">
             <div className="hero-text animate-reveal">
@@ -225,45 +212,19 @@ function App() {
       />
 
       <style>{`
-        .app-container {
+        .app {
           min-height: 100vh;
           display: flex;
           flex-direction: column;
           background: var(--bg-primary);
         }
 
-        .app-header {
-          padding: var(--space-6) var(--space-6) 0;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .header-actions {
-          display: flex;
-          align-items: center;
-        }
-
-        .logo-mark {
-          display: flex;
-          align-items: center;
-          gap: var(--space-3);
-        }
-
-        .logo-text {
-          font-family: var(--font-display);
-          font-size: 1.375rem;
-          font-weight: 600;
-          letter-spacing: -0.01em;
-          color: var(--ink-primary);
-        }
-
-        .app-main {
+        .main {
           flex: 1;
           display: flex;
           flex-direction: column;
           justify-content: center;
-          padding: var(--space-8) var(--space-6);
+          padding: 3rem 1.5rem;
           max-width: 720px;
           margin: 0 auto;
           width: 100%;
@@ -290,7 +251,7 @@ function App() {
         }
 
         .hero-subtitle {
-          max-width: 480px;
+          white-space: nowrap;
         }
 
         .form-wrapper {

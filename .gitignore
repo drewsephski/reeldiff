@@ -25,3 +25,4 @@ dist-ssr
 .env.local
 .vercel
 .claude/settings.local.json
+.env*.local

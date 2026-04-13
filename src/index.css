@@ -46,6 +46,29 @@
   --duration-slow: 500ms;
 }
 
+/* Dark mode overrides */
+:root.dark {
+  /* Deep warm dark palette */
+  --bg-primary: #0D0C0A;
+  --bg-secondary: #1A1814;
+  --bg-tertiary: #25221C;
+
+  /* Warm light neutrals */
+  --ink-primary: #F5F1EA;
+  --ink-secondary: #C4BBB0;
+  --ink-tertiary: #8A8278;
+  --ink-muted: #5A534A;
+
+  /* Accent stays warm but adjusted for dark bg */
+  --accent: #D67454;
+  --accent-hover: #E08566;
+  --accent-subtle: rgba(214, 116, 84, 0.12);
+
+  /* Border and separation - inverted */
+  --border: rgba(245, 241, 234, 0.08);
+  --border-strong: rgba(245, 241, 234, 0.16);
+}
+
 * {
   margin: 0;
   padding: 0;

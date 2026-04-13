@@ -5,6 +5,15 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ReelDiff — Turn GitHub PRs into Videos</title>
+    <script>
+      (function() {
+        const saved = localStorage.getItem('reeldiff-theme');
+        const theme = saved === 'light' || saved === 'dark'
+          ? saved
+          : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.classList.add(theme);
+      })();
+    </script>
     <meta name="description" content="Transform any GitHub pull request into a shareable short-form video. Powered by AI." />
     <meta name="theme-color" content="#FDFBF7" />
 
