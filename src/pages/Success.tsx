@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 
 /**
@@ -10,6 +11,8 @@ import { useAuth } from '@clerk/clerk-react';
  */
 export default function Success() {
   const { getToken, isSignedIn } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Processing your purchase...');
 
@@ -22,8 +25,7 @@ export default function Success() {
 
     const syncData = async () => {
       // Get session_id from URL params
-      const urlParams = new URLSearchParams(window.location.search);
-      const sessionId = urlParams.get('session_id');
+      const sessionId = searchParams.get('session_id');
 
       if (!sessionId) {
         setStatus('error');
@@ -61,7 +63,7 @@ export default function Success() {
 
         // Redirect after short delay
         setTimeout(() => {
-          window.location.href = '/';
+          navigate('/');
         }, 1500);
       } catch (err) {
         console.error('Sync error:', err);
@@ -70,13 +72,13 @@ export default function Success() {
 
         // Still redirect after delay - webhook will handle it
         setTimeout(() => {
-          window.location.href = '/';
+          navigate('/');
         }, 3000);
       }
     };
 
     syncData();
-  }, [isSignedIn, getToken]);
+  }, [isSignedIn, getToken, searchParams, navigate]);
 
   return (
     <div className="success-page">
