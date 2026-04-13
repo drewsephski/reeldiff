@@ -96,6 +96,7 @@ export const processGitHubWebhook = task({
           trigger_event: eventType,
           trigger_details: payload as unknown as Database["public"]["Tables"]["videos"]["Insert"]["trigger_details"],
           status: "pending",
+          source: "webhook",
         })
         .select()
         .single();

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
-import { Play, Clock, CheckCircle, XCircle, Film, ExternalLink, ChevronLeft } from 'lucide-react';
+import { Play, Clock, CheckCircle, XCircle, Film, ExternalLink, ChevronLeft, GitBranch, AppWindow } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSupabase, type Video, type Project } from '../lib/supabase';
 import { Navbar } from '../components/Navbar';
@@ -9,6 +9,8 @@ import { Navbar } from '../components/Navbar';
 interface VideoWithProject extends Video {
   projects?: Project;
 }
+
+type SourceFilter = 'all' | 'webhook' | 'app';
 
 export default function Videos() {
   const { user, isSignedIn } = useUser();
@@ -18,6 +20,7 @@ export default function Videos() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<VideoWithProject | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
 
   const loadVideos = useCallback(async () => {
     if (!user) return;
@@ -73,6 +76,35 @@ export default function Videos() {
     });
   };
 
+  const getSourceIcon = (source: string) => {
+    switch (source) {
+      case 'webhook':
+        return <GitBranch size={14} />;
+      case 'app':
+        return <AppWindow size={14} />;
+      default:
+        return <Film size={14} />;
+    }
+  };
+
+  const getSourceLabel = (source: string) => {
+    switch (source) {
+      case 'webhook':
+        return 'GitHub';
+      case 'app':
+        return 'App';
+      default:
+        return source;
+    }
+  };
+
+  const filteredVideos = videos.filter(video => 
+    sourceFilter === 'all' || video.source === sourceFilter
+  );
+
+  const webhookCount = videos.filter(v => v.source === 'webhook').length;
+  const appCount = videos.filter(v => v.source === 'app').length;
+
   return (
     <div className="videos-page">
       <Navbar onBuyCredits={() => {}} />
@@ -83,7 +115,31 @@ export default function Videos() {
             <h1 className="text-headline">Your Videos</h1>
             <p className="text-body">
               {videos.length} video{videos.length !== 1 ? 's' : ''} generated
+              {webhookCount > 0 && ` · ${webhookCount} from GitHub`}
+              {appCount > 0 && ` · ${appCount} from app`}
             </p>
+          </div>
+          <div className="source-filter">
+            <button
+              className={`filter-tab ${sourceFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setSourceFilter('all')}
+            >
+              All
+            </button>
+            <button
+              className={`filter-tab ${sourceFilter === 'webhook' ? 'active' : ''}`}
+              onClick={() => setSourceFilter('webhook')}
+            >
+              <GitBranch size={14} />
+              GitHub
+            </button>
+            <button
+              className={`filter-tab ${sourceFilter === 'app' ? 'active' : ''}`}
+              onClick={() => setSourceFilter('app')}
+            >
+              <AppWindow size={14} />
+              App
+            </button>
           </div>
         </div>
 
@@ -127,7 +183,7 @@ export default function Videos() {
                 ))}
               </div>
             </motion.div>
-          ) : videos.length === 0 ? (
+          ) : filteredVideos.length === 0 ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0, y: 20 }}
@@ -137,9 +193,15 @@ export default function Videos() {
               <div className="empty-icon">
                 <Film size={48} />
               </div>
-              <h3 className="text-title">No videos yet</h3>
+              <h3 className="text-title">
+                {sourceFilter === 'all' ? 'No videos yet' : `No ${sourceFilter} videos`}
+              </h3>
               <p className="text-body">
-                Connect a GitHub repository and merge a PR to generate your first video.
+                {sourceFilter === 'webhook'
+                  ? 'Connect a GitHub repository and merge a PR to generate videos.'
+                  : sourceFilter === 'app'
+                  ? 'Generate videos from the playground or demo to see them here.'
+                  : 'Connect a GitHub repository or generate videos from the app to get started.'}
               </p>
               <button onClick={() => navigate('/projects')} className="btn-primary">
                 Go to Projects
@@ -152,7 +214,7 @@ export default function Videos() {
               animate={{ opacity: 1 }}
               className="videos-grid"
             >
-              {videos.map((video) => (
+              {filteredVideos.map((video) => (
                 <motion.div
                   key={video.id}
                   layout
@@ -170,6 +232,10 @@ export default function Videos() {
                     <div className={`status-badge ${video.status}`}>
                       {getStatusIcon(video.status)}
                       <span>{video.status}</span>
+                    </div>
+                    <div className={`source-badge ${video.source}`}>
+                      {getSourceIcon(video.source)}
+                      <span>{getSourceLabel(video.source)}</span>
                     </div>
                   </div>
 
@@ -751,6 +817,64 @@ export default function Videos() {
           margin-top: var(--space-2);
         }
 
+        .source-filter {
+          display: flex;
+          gap: var(--space-2);
+          background: var(--bg-secondary);
+          padding: var(--space-1);
+          border-radius: 12px;
+          border: 1px solid var(--border);
+        }
+
+        .filter-tab {
+          display: flex;
+          align-items: center;
+          gap: var(--space-1);
+          padding: var(--space-2) var(--space-3);
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--ink-secondary);
+          background: transparent;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all var(--duration-fast);
+        }
+
+        .filter-tab:hover {
+          color: var(--ink-primary);
+          background: var(--bg-tertiary);
+        }
+
+        .filter-tab.active {
+          color: var(--accent);
+          background: var(--bg-primary);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .source-badge {
+          position: absolute;
+          top: var(--space-2);
+          right: var(--space-2);
+          display: flex;
+          align-items: center;
+          gap: var(--space-1);
+          padding: var(--space-1) var(--space-2);
+          border-radius: 20px;
+          font-size: 0.75rem;
+          font-weight: 500;
+        }
+
+        .source-badge.webhook {
+          background: rgba(59, 130, 246, 0.2);
+          color: #3b82f6;
+        }
+
+        .source-badge.app {
+          background: rgba(139, 92, 246, 0.2);
+          color: #8b5cf6;
+        }
+
         @media (max-width: 640px) {
           .videos-grid,
           .skeleton-grid {
@@ -763,6 +887,22 @@ export default function Videos() {
 
           .loading-title {
             font-size: 1.25rem;
+          }
+
+          .videos-header {
+            flex-direction: column;
+            gap: var(--space-4);
+            align-items: flex-start;
+          }
+
+          .source-filter {
+            width: 100%;
+            justify-content: stretch;
+          }
+
+          .filter-tab {
+            flex: 1;
+            justify-content: center;
           }
         }
       `}</style>
