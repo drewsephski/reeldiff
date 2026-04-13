@@ -3,7 +3,7 @@ import { config } from 'dotenv';
 import { generateText, Output } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { z } from 'zod';
-import { getAuth } from '@clerk/nextjs/server';
+import { verifyToken } from '@clerk/backend';
 import { getUserCredits, hasCredits as checkCredits } from './lib/stripe-sync.js';
 
 config({ path: '.env.local' });
@@ -33,10 +33,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { userId } = getAuth(req);
-
-    if (!userId) {
+    // Get token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    // Verify the Clerk token
+    const payload = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY,
+    });
+
+    const userId = payload.sub;
+    if (!userId) {
+      return res.status(401).json({ error: 'Invalid token' });
     }
 
     const { prUrl } = req.body;
