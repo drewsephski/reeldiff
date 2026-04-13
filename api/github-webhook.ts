@@ -20,16 +20,17 @@ async function getRawBody(req: VercelRequest): Promise<Buffer> {
 
 // This endpoint receives GitHub webhooks and triggers Trigger.dev tasks
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  console.log("[WEBHOOK] Received request:", {
-    method: req.method,
-    url: req.url,
-    headers: {
-      "content-type": req.headers["content-type"],
-      "x-github-event": req.headers["x-github-event"],
-      "x-github-delivery": req.headers["x-github-delivery"],
-      "x-hub-signature-256": req.headers["x-hub-signature-256"] ? "present" : "missing",
-    },
-  });
+  try {
+    console.log("[WEBHOOK] Received request:", {
+      method: req.method,
+      url: req.url,
+      headers: {
+        "content-type": req.headers["content-type"],
+        "x-github-event": req.headers["x-github-event"],
+        "x-github-delivery": req.headers["x-github-delivery"],
+        "x-hub-signature-256": req.headers["x-hub-signature-256"] ? "present" : "missing",
+      },
+    });
 
   // Only accept POST requests
   if (req.method !== "POST") {
@@ -131,10 +132,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       runId: result.id,
     });
   } catch (error) {
-    console.error("Failed to trigger task:", error);
+    console.error("[WEBHOOK] Failed to trigger task:", error);
     return res.status(500).json({
       error: "Failed to process webhook",
       details: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+  } catch (err) {
+    console.error("[WEBHOOK] Unhandled error:", err);
+    return res.status(500).json({
+      error: "Internal server error",
+      details: err instanceof Error ? err.message : "Unknown error",
     });
   }
 }
