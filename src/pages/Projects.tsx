@@ -297,9 +297,12 @@ export default function Projects() {
                         <Video size={16} />
                       </button>
                       <button
-                        onClick={() => navigate(`/projects/${project.id}/settings`)}
+                        onClick={() => {
+                          setNewlyCreatedProject(project);
+                          setIsWalkthroughOpen(true);
+                        }}
                         className="btn-icon"
-                        title="Settings"
+                        title="Configure setup"
                       >
                         <Settings size={16} />
                       </button>
