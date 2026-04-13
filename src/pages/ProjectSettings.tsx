@@ -126,7 +126,6 @@ export default function ProjectSettings() {
     return (
       <div className="settings-page">
         <Navbar onBuyCredits={() => {}} />
-<<<<<<< HEAD
         <main className="settings-main">
           <div className="settings-header">
             <button onClick={() => navigate('/projects')} className="btn-back">
@@ -159,12 +158,6 @@ export default function ProjectSettings() {
           .loading-subtext { font-size: 0.875rem; color: var(--ink-muted); }
           @keyframes spin { to { transform: rotate(360deg); } }
         `}</style>
-=======
-        <div className="loading-state">
-          <div className="spinner" />
-          Loading project settings...
-        </div>
->>>>>>> origin/feat/webhook-automation
       </div>
     );
   }

@@ -1,19 +1,11 @@
 import { useState, useEffect } from 'react';
-<<<<<<< HEAD
 import { useNavigate, useSearchParams } from 'react-router-dom';
-=======
-import { useNavigate } from 'react-router-dom';
->>>>>>> origin/feat/webhook-automation
 import { useUser } from '@clerk/clerk-react';
 import { Plus, Settings, Video, ExternalLink, Trash2, AlertCircle, Film, Clapperboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase, type Project, type WebhookConfig } from '../lib/supabase';
 import { Navbar } from '../components/Navbar';
-<<<<<<< HEAD
-import { SetupWizard } from '../components/SetupWizard';
-=======
 import { SetupWalkthrough } from '../components/SetupWalkthrough';
->>>>>>> origin/feat/webhook-automation
 
 interface ProjectWithConfig extends Project {
   webhook_configs?: WebhookConfig[];
@@ -22,10 +14,7 @@ interface ProjectWithConfig extends Project {
 export default function Projects() {
   const { user, isSignedIn } = useUser();
   const navigate = useNavigate();
-<<<<<<< HEAD
   const [searchParams] = useSearchParams();
-=======
->>>>>>> origin/feat/webhook-automation
   const [projects, setProjects] = useState<ProjectWithConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +24,6 @@ export default function Projects() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
-<<<<<<< HEAD
   const loadProjectForSetup = async (projectId: string) => {
     if (!user) return;
     
@@ -59,23 +47,18 @@ export default function Projects() {
     }
   };
 
-=======
->>>>>>> origin/feat/webhook-automation
   useEffect(() => {
     if (!isSignedIn) {
       navigate('/');
       return;
     }
 
-<<<<<<< HEAD
     // Check if we should open setup for a specific project (from GitHub callback)
     const setupProjectId = searchParams.get('setup');
     if (setupProjectId) {
       loadProjectForSetup(setupProjectId);
     }
 
-=======
->>>>>>> origin/feat/webhook-automation
     // Load projects
     const loadProjects = async () => {
       if (!user) return;
@@ -103,6 +86,7 @@ export default function Projects() {
     loadProjects();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn, navigate, user, searchParams]);
+
 
   const refreshProjects = async () => {
     if (!user) return;
@@ -447,7 +431,8 @@ export default function Projects() {
               animate={{ opacity: 1, scale: 1, x: '-50%', y: '-50%' }}
               exit={{ opacity: 0, scale: 0.95, x: '-50%', y: '-50%' }}
             >
-<SetupWizard
+
+              <SetupWalkthrough
                 projectId={newlyCreatedProject.id}
                 repoOwner={newlyCreatedProject.repo_owner}
                 repoName={newlyCreatedProject.repo_name}

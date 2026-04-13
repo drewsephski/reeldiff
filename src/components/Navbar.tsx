@@ -35,7 +35,6 @@ export function Navbar({ onBuyCredits }: NavbarProps) {
 
         <div className="nav-actions">
           {isSignedIn && (
-<<<<<<< HEAD
             <>
               <Link to="/projects" className="nav-link">
                 Projects
@@ -44,11 +43,6 @@ export function Navbar({ onBuyCredits }: NavbarProps) {
                 Videos
               </Link>
             </>
-=======
-            <Link to="/projects" className="nav-link">
-              Projects
-            </Link>
->>>>>>> origin/feat/webhook-automation
           )}
           <button className="pricing-link" onClick={handlePricingClick}>
             Pricing
