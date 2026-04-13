@@ -3,7 +3,7 @@ import { TransitionSeries, linearTiming, springTiming } from '@remotion/transiti
 import { fade } from '@remotion/transitions/fade';
 import { slide } from '@remotion/transitions/slide';
 import { wipe } from '@remotion/transitions/wipe';
-import { LightLeak } from '@remotion/light-leaks';
+// import { LightLeak } from '@remotion/light-leaks';
 import type { RepoVideoScript } from '../types';
 import { RepoIntroScene } from './scenes/RepoIntroScene';
 import { HeadlineScene } from './scenes/HeadlineScene';
@@ -24,28 +24,6 @@ export const RepoComposition: React.FC<RepoVideoScript> = (props) => {
   // Map repo tone to headline tone (HeadlineScene supports superset)
   const headlineTone = style.tone as 'celebratory' | 'educational' | 'hype' | 'technical';
 
-  // Calculate hue shift from accent color for light leaks
-  const getHueFromColor = (hexColor: string): number => {
-    const hex = hexColor.replace('#', '');
-    const r = parseInt(hex.substring(0, 2), 16) / 255;
-    const g = parseInt(hex.substring(2, 4), 16) / 255;
-    const b = parseInt(hex.substring(4, 6), 16) / 255;
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    const d = max - min;
-    let h = 0;
-    if (d !== 0) {
-      switch (max) {
-        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / d + 2) / 6; break;
-        case b: h = ((r - g) / d + 4) / 6; break;
-      }
-    }
-    return h * 360;
-  };
-
-  const hueShift = getHueFromColor(style.accentColor);
-
   return (
     <AbsoluteFill style={{ backgroundColor: '#1a1a2e' }}>
       <TransitionSeries>
@@ -62,13 +40,6 @@ export const RepoComposition: React.FC<RepoVideoScript> = (props) => {
           />
           <CinematicOverlays showFilmGrain={true} showVignette={true} vignetteIntensity={0.3} />
         </TransitionSeries.Sequence>
-
-        {/* Intro to Headline: Light leak overlay - temporarily disabled */}
-         <TransitionSeries.Overlay durationInFrames={TRANSITION_DURATION + 10}>
-          <div style={{ position: 'absolute', inset: 0 }}>
-            <LightLeak seed={0} hueShift={hueShift} />
-          </div>
-        </TransitionSeries.Overlay>
 
         {/* Intro to Headline: Slide from right */}
         <TransitionSeries.Transition
@@ -88,13 +59,6 @@ export const RepoComposition: React.FC<RepoVideoScript> = (props) => {
           <CinematicOverlays showFilmGrain={true} showVignette={true} vignetteIntensity={0.35} />
         </TransitionSeries.Sequence>
 
-        {/* Headline to Bullets: Light leak overlay - temporarily disabled */}
-        <TransitionSeries.Overlay durationInFrames={TRANSITION_DURATION + 10}>
-          <div style={{ position: 'absolute', inset: 0 }}>
-            <LightLeak seed={1} hueShift={(hueShift + 60) % 360} />
-          </div>
-        </TransitionSeries.Overlay> 
-
         {/* Headline to Bullets: Wipe transition */}
         <TransitionSeries.Transition
           presentation={wipe({ direction: 'from-left' })}
@@ -112,13 +76,6 @@ export const RepoComposition: React.FC<RepoVideoScript> = (props) => {
             <CinematicOverlays showFilmGrain={true} showVignette={true} vignetteIntensity={0.3} />
           </TransitionSeries.Sequence>
         ))}
-
-        {/* Bullets to Outro: Light leak overlay - temporarily disabled */}
-         <TransitionSeries.Overlay durationInFrames={TRANSITION_DURATION + 10}>
-          <div style={{ position: 'absolute', inset: 0 }}>
-            <LightLeak seed={2} hueShift={(hueShift + 120) % 360} />
-          </div>
-        </TransitionSeries.Overlay>
 
         {/* Bullets to Outro: Fade transition */}
         <TransitionSeries.Transition
