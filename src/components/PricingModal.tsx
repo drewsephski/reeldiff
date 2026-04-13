@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth, useUser } from '@clerk/clerk-react';
 
@@ -30,8 +30,24 @@ const TIERS = [
 export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
   const { getToken } = useAuth();
   const { user } = useUser();
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      setIsVisible(true);
+      document.body.style.overflow = 'hidden';
+    } else {
+      const timer = setTimeout(() => setIsVisible(false), 200);
+      document.body.style.overflow = '';
+      return () => clearTimeout(timer);
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   const handlePurchase = async (tier: string) => {
     setLoading(tier);
@@ -73,26 +89,45 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {isVisible && (
         <>
           <motion.div
             className="pricing-overlay"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            animate={{ opacity: isOpen ? 1 : 0 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             onClick={onClose}
           />
           <motion.div
-            className="pricing-modal"
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="pricing-modal-wrapper"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isOpen ? 1 : 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
+            <motion.div
+              className="pricing-modal"
+              initial={{ opacity: 0, scale: 0.92, y: 24 }}
+              animate={{ opacity: isOpen ? 1 : 0, scale: isOpen ? 1 : 0.92, y: isOpen ? 0 : 24 }}
+              exit={{ opacity: 0, scale: 0.92, y: 24 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 350, mass: 0.8 }}
+            >
             <div className="pricing-header">
+              <div className="pricing-icon">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                  <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="2" opacity="0.2"/>
+                  <circle cx="16" cy="16" r="8" stroke="currentColor" strokeWidth="2"/>
+                  <circle cx="16" cy="16" r="3" fill="currentColor"/>
+                </svg>
+              </div>
               <h2>Buy Credits</h2>
               <p>Generate more videos from your PRs and repos</p>
-              <button className="close-btn" onClick={onClose}>×</button>
+              <button className="close-btn" onClick={onClose} aria-label="Close">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M1 1L7 7M7 7L1 13M7 7L13 1M7 7L13 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </button>
             </div>
 
             {error && (
@@ -139,39 +174,82 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
               .pricing-overlay {
                 position: fixed;
                 inset: 0;
-                background: rgba(0, 0, 0, 0.5);
-                backdrop-filter: blur(4px);
+                background: rgba(0, 0, 0, 0.6);
+                backdrop-filter: blur(8px);
                 z-index: 100;
               }
 
-              .pricing-modal {
+              .pricing-modal-wrapper {
                 position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                width: 90%;
-                max-width: 520px;
-                max-height: 90vh;
+                inset: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 24px;
+                z-index: 101;
+                overflow-y: auto;
+                overscroll-behavior: contain;
+              }
+
+              .pricing-modal {
+                position: relative;
+                width: 100%;
+                max-width: 480px;
+                max-height: calc(100vh - 48px);
                 overflow-y: auto;
                 background: var(--bg-primary);
-                border-radius: 16px;
-                padding: 32px;
-                z-index: 101;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                border-radius: 20px;
+                padding: 36px;
+                box-shadow: 
+                  0 25px 80px rgba(0, 0, 0, 0.35),
+                  0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+                scrollbar-width: thin;
+                scrollbar-color: var(--border) transparent;
+              }
+
+              .pricing-modal::-webkit-scrollbar {
+                width: 6px;
+              }
+
+              .pricing-modal::-webkit-scrollbar-track {
+                background: transparent;
+                margin: 8px 0;
+              }
+
+              .pricing-modal::-webkit-scrollbar-thumb {
+                background: var(--border);
+                border-radius: 3px;
+              }
+
+              .pricing-modal::-webkit-scrollbar-thumb:hover {
+                background: var(--border-strong);
               }
 
               .pricing-header {
                 text-align: center;
-                margin-bottom: 24px;
+                margin-bottom: 28px;
                 position: relative;
+              }
+
+              .pricing-icon {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 56px;
+                height: 56px;
+                margin: 0 auto 16px;
+                color: var(--accent);
+                background: linear-gradient(135deg, rgba(196, 92, 62, 0.1) 0%, rgba(196, 92, 62, 0.05) 100%);
+                border-radius: 14px;
               }
 
               .pricing-header h2 {
                 font-family: var(--font-display);
-                font-size: 1.75rem;
+                font-size: 1.625rem;
                 font-weight: 600;
-                margin: 0 0 8px;
+                margin: 0 0 6px;
                 color: var(--ink-primary);
+                letter-spacing: -0.01em;
               }
 
               .pricing-header p {
@@ -182,18 +260,16 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
 
               .close-btn {
                 position: absolute;
-                top: -8px;
-                right: -8px;
-                width: 32px;
-                height: 32px;
+                top: -12px;
+                right: -12px;
+                width: 36px;
+                height: 36px;
                 border-radius: 50%;
                 border: none;
                 background: var(--bg-secondary);
                 color: var(--ink-secondary);
-                font-size: 1.5rem;
-                line-height: 1;
                 cursor: pointer;
-                transition: all var(--duration-fast);
+                transition: all 0.2s ease;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -202,6 +278,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
               .close-btn:hover {
                 background: var(--bg-tertiary);
                 color: var(--ink-primary);
+                transform: rotate(90deg);
               }
 
               .pricing-error {
@@ -362,6 +439,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
                 margin: 0;
               }
             `}</style>
+            </motion.div>
           </motion.div>
         </>
       )}

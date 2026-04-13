@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
-import { addCredits, syncStripeDataToKV } from '../lib/stripe-sync';
+import { addCredits, syncStripeDataToKV } from '../lib/stripe-sync.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2026-03-25.dahlia',

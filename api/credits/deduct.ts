@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getAuth } from '@clerk/nextjs/server';
-import { deductCredit } from '../lib/stripe-sync';
+import { deductCredit } from '../lib/stripe-sync.js';
 
 /**
  * POST /api/credits/deduct

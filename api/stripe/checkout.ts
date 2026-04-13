@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getAuth } from '@clerk/nextjs/server';
 import Stripe from 'stripe';
-import { getOrCreateStripeCustomer } from '../lib/stripe-sync';
+import { getOrCreateStripeCustomer } from '../lib/stripe-sync.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2026-03-25.dahlia',

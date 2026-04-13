@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getAuth } from '@clerk/nextjs/server';
-import { getUserCredits } from './lib/stripe-sync';
+import { getUserCredits } from './lib/stripe-sync.js';
 
 /**
  * GET /api/credits

@@ -4,7 +4,7 @@ import { generateText, Output } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { z } from 'zod';
 import { getAuth } from '@clerk/nextjs/server';
-import { getUserCredits, hasCredits as checkCredits } from './lib/stripe-sync';
+import { getUserCredits, hasCredits as checkCredits } from './lib/stripe-sync.js';
 
 config({ path: '.env.local' });
 
