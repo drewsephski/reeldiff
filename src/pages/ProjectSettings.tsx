@@ -126,6 +126,7 @@ export default function ProjectSettings() {
     return (
       <div className="settings-page">
         <Navbar onBuyCredits={() => {}} />
+<<<<<<< HEAD
         <main className="settings-main">
           <div className="settings-header">
             <button onClick={() => navigate('/projects')} className="btn-back">
@@ -158,6 +159,12 @@ export default function ProjectSettings() {
           .loading-subtext { font-size: 0.875rem; color: var(--ink-muted); }
           @keyframes spin { to { transform: rotate(360deg); } }
         `}</style>
+=======
+        <div className="loading-state">
+          <div className="spinner" />
+          Loading project settings...
+        </div>
+>>>>>>> origin/feat/webhook-automation
       </div>
     );
   }
@@ -365,12 +372,18 @@ export default function ProjectSettings() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
+<<<<<<< HEAD
           padding: var(--space-8) 0;
+=======
+          gap: var(--space-4);
+          padding: var(--space-16);
+>>>>>>> origin/feat/webhook-automation
           color: var(--ink-muted);
         }
 
         .error-state {
           color: var(--accent);
+<<<<<<< HEAD
           gap: var(--space-4);
           padding: var(--space-16);
         }
@@ -386,6 +399,8 @@ export default function ProjectSettings() {
           border-radius: 16px;
           width: 100%;
           max-width: 400px;
+=======
+>>>>>>> origin/feat/webhook-automation
         }
 
         .spinner {
@@ -397,6 +412,7 @@ export default function ProjectSettings() {
           animation: spin 0.8s linear infinite;
         }
 
+<<<<<<< HEAD
         .spinner-large {
           width: 48px;
           height: 48px;
@@ -417,6 +433,8 @@ export default function ProjectSettings() {
           color: var(--ink-muted);
         }
 
+=======
+>>>>>>> origin/feat/webhook-automation
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
