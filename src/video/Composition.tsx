@@ -60,18 +60,18 @@ export const PatchPlayComposition: React.FC<VideoScript> = (props) => {
           presentation={wipe({ direction: 'from-left' })}
           timing={springTiming({ config: { damping: 150 }, durationInFrames: TRANSITION_DURATION })}
         />
-        <TransitionSeries.Overlay durationInFrames={20}>
-          <AbsoluteFill style={{ pointerEvents: 'none' }}>
-            <LightLeak seed={1} hueShift={getHueFromColor(style.accentColor)} />
-          </AbsoluteFill>
-        </TransitionSeries.Overlay>
 
-        {/* Bullet Scenes with alternating transitions */}
+        {/* Bullet Scenes with alternating transitions and light leak on first bullet */}
         {summary.bullets.map((bullet, i) => (
           <TransitionSeries.Sequence
             key={i}
             durationInFrames={BULLET_DURATION}
           >
+            {i === 0 && (
+              <AbsoluteFill style={{ pointerEvents: 'none' }}>
+                <LightLeak seed={1} hueShift={getHueFromColor(style.accentColor)} />
+              </AbsoluteFill>
+            )}
             <Audio src="/audio/pop.mp3" volume={0.4} />
             <BulletScene text={bullet} index={i} accentColor={style.accentColor} />
             <CinematicOverlays showVignette={true} vignetteIntensity={0.25} />
@@ -83,14 +83,12 @@ export const PatchPlayComposition: React.FC<VideoScript> = (props) => {
           presentation={fade()}
           timing={springTiming({ config: { damping: 150 }, durationInFrames: TRANSITION_DURATION })}
         />
-        <TransitionSeries.Overlay durationInFrames={25}>
+
+        {/* Outro Scene with light leak overlay */}
+        <TransitionSeries.Sequence durationInFrames={OUTRO_DURATION}>
           <AbsoluteFill style={{ pointerEvents: 'none' }}>
             <LightLeak seed={2} hueShift={getHueFromColor(style.accentColor) + 30} />
           </AbsoluteFill>
-        </TransitionSeries.Overlay>
-
-        {/* Outro Scene */}
-        <TransitionSeries.Sequence durationInFrames={OUTRO_DURATION}>
           <Audio src="/audio/chime.mp3" volume={0.5} />
           <OutroScene
             repoName={meta.repoName}
