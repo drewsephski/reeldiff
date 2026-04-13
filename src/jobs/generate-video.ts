@@ -2,6 +2,9 @@ import { task } from "@trigger.dev/sdk/v3";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../types/supabase";
 import { distributeVideo } from "./distribute-video";
+import { renderMedia, renderStill, selectComposition } from "@remotion/renderer";
+import { execSync } from "child_process";
+import { readFile } from "fs/promises";
 
 // Lazy initialization helper for Supabase client
 function getSupabase() {
@@ -75,16 +78,114 @@ export const generateVideo = task({
 
       const videoScript = await analyzeResponse.json();
 
-      // TODO: Render video using Remotion (this would be done via Remotion Lambda or local rendering)
-      // For now, we'll simulate the video generation
-      console.log("Video script generated:", videoScript);
+      // Build the video bundle
+      console.log("Building Remotion bundle...");
+      const bundleLocation = await new Promise<string>((resolve, reject) => {
+        const outputDir = `/tmp/remotion-bundle-${videoId}`;
+        try {
+          execSync(
+            `npx remotion bundle src/video/index.tsx --out-dir=${outputDir}`,
+            { cwd: process.cwd(), stdio: "pipe" }
+          );
+          resolve(outputDir);
+        } catch (err) {
+          reject(err);
+        }
+      });
 
-      // Simulate video generation delay
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      console.log("Bundle created at:", bundleLocation);
 
-      // Store video metadata
-      const videoUrl = `https://storage.example.com/videos/${videoId}.mp4`;
-      const thumbnailUrl = `https://storage.example.com/thumbnails/${videoId}.jpg`;
+      // Select the composition
+      const composition = await selectComposition({
+        serveUrl: bundleLocation,
+        id: "PatchPlay",
+        inputProps: videoScript,
+      });
+
+      // Render the video
+      console.log("Rendering video...");
+      const outputPath = `/tmp/${videoId}.mp4`;
+      await renderMedia({
+        composition,
+        serveUrl: bundleLocation,
+        codec: "h264",
+        outputLocation: outputPath,
+        inputProps: videoScript,
+      });
+
+      console.log("Video rendered to:", outputPath);
+
+      // Read the video file
+      const videoBuffer = await readFile(outputPath);
+      console.log(`Video size: ${(videoBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+
+      // Upload to Supabase Storage
+      const storagePath = `${projectId}/${videoId}.mp4`;
+      console.log("Uploading to Supabase Storage...");
+
+      const { error: uploadError } = await supabase.storage
+        .from("videos")
+        .upload(storagePath, videoBuffer, {
+          contentType: "video/mp4",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        throw new Error(`Failed to upload video: ${uploadError.message}`);
+      }
+
+      console.log("Video uploaded successfully");
+
+      // Generate thumbnail from the composition (render frame at 2 seconds)
+      console.log("Generating thumbnail...");
+      const thumbnailPath = `/tmp/${videoId}-thumb.jpg`;
+      await renderStill({
+        composition,
+        serveUrl: bundleLocation,
+        output: thumbnailPath,
+        frame: 60, // 2 seconds at 30fps - shows intro scene
+        imageFormat: "jpeg",
+        jpegQuality: 85,
+        scale: 0.5, // 960x540 - good for thumbnails
+        inputProps: videoScript,
+      });
+
+      // Read and upload thumbnail
+      const thumbnailBuffer = await readFile(thumbnailPath);
+      console.log(`Thumbnail size: ${(thumbnailBuffer.length / 1024).toFixed(2)} KB`);
+
+      const thumbnailStoragePath = `${projectId}/${videoId}-thumb.jpg`;
+      const { error: thumbnailUploadError } = await supabase.storage
+        .from("videos")
+        .upload(thumbnailStoragePath, thumbnailBuffer, {
+          contentType: "image/jpeg",
+          upsert: false,
+        });
+
+      if (thumbnailUploadError) {
+        console.error("Failed to upload thumbnail:", thumbnailUploadError.message);
+        // Don't throw - video is already uploaded, thumbnail is optional
+      } else {
+        console.log("Thumbnail uploaded successfully");
+      }
+
+      // Generate signed URLs (valid for 7 days)
+      const { data: videoUrlData } = await supabase.storage
+        .from("videos")
+        .createSignedUrl(storagePath, 60 * 60 * 24 * 7);
+
+      const videoUrl = videoUrlData?.signedUrl || "";
+
+      // Get thumbnail URL (use signed URL if uploaded, otherwise fallback)
+      let thumbnailUrl = `https://ui-avatars.com/api/?name=PR+${prData.number}&background=random&size=400`;
+      if (!thumbnailUploadError) {
+        const { data: thumbUrlData } = await supabase.storage
+          .from("videos")
+          .createSignedUrl(thumbnailStoragePath, 60 * 60 * 24 * 7);
+        if (thumbUrlData?.signedUrl) {
+          thumbnailUrl = thumbUrlData.signedUrl;
+        }
+      }
 
       await supabase
         .from("videos")
@@ -92,7 +193,11 @@ export const generateVideo = task({
           status: "completed",
           video_url: videoUrl,
           thumbnail_url: thumbnailUrl,
-          metadata: videoScript,
+          storage_path: storagePath,
+          metadata: {
+            ...videoScript,
+            thumbnailStoragePath: thumbnailUploadError ? null : thumbnailStoragePath,
+          },
           completed_at: new Date().toISOString(),
         })
         .eq("id", videoId);
