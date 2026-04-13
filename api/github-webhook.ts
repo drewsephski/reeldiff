@@ -33,25 +33,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Trigger the Trigger.dev task
   try {
-    // Import the Trigger.dev SDK dynamically
-    const trigger = await import("@trigger.dev/sdk/v3");
+    const { tasks } = await import("@trigger.dev/sdk/v3");
     
     // Trigger the webhook processing task
-    // Note: In production, you'd use the Trigger.dev API or SDK to trigger this
-    console.log("Triggering process-github-webhook task with payload:", {
+    const result = await tasks.trigger("process-github-webhook", {
+      action: req.body.action,
+      pull_request: req.body.pull_request,
+      repository: req.body.repository,
+      sender: req.body.sender,
+    });
+
+    console.log("Triggered process-github-webhook task:", {
+      runId: result.id,
       event,
       action: req.body.action,
       repository: req.body.repository?.full_name,
-      triggerModule: trigger ? "loaded" : "failed",
     });
 
-    // For now, just acknowledge receipt
-    // The actual triggering would happen via Trigger.dev's API
     return res.status(202).json({
-      message: "Webhook received",
+      message: "Webhook received and processing triggered",
       event,
       deliveryId,
       triggered: true,
+      runId: result.id,
     });
   } catch (error) {
     console.error("Failed to trigger task:", error);
