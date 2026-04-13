@@ -24,6 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // }
 
   console.log(`Received GitHub webhook: ${event} (delivery: ${deliveryId})`);
+  console.log("Request body:", JSON.stringify(req.body, null, 2));
 
   // Only process events we care about
   const supportedEvents = ["pull_request", "release", "issues"];
@@ -31,17 +32,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ message: "Event type not supported", event });
   }
 
+  // Validate required fields
+  if (!req.body || !req.body.action) {
+    console.error("Invalid webhook payload - missing action:", req.body);
+    return res.status(400).json({ error: "Invalid webhook payload" });
+  }
+
   // Trigger the Trigger.dev task
   try {
     const { tasks } = await import("@trigger.dev/sdk/v3");
     
-    // Trigger the webhook processing task
-    const result = await tasks.trigger("process-github-webhook", {
+    const payload = {
       action: req.body.action,
       pull_request: req.body.pull_request,
       repository: req.body.repository,
       sender: req.body.sender,
-    });
+    };
+    
+    console.log("Triggering task with payload:", JSON.stringify(payload, null, 2));
+    
+    // Trigger the webhook processing task
+    const result = await tasks.trigger("process-github-webhook", payload);
 
     console.log("Triggered process-github-webhook task:", {
       runId: result.id,
