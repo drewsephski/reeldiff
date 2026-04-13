@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { InputForm } from './components/InputForm';
@@ -55,6 +56,17 @@ function App() {
       void loadCredits();
     }
   }, [loadCredits]);
+
+  // Handle pricing modal from URL params
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('pricing') === 'true') {
+      // Open pricing modal
+      setIsPricingOpen(true);
+      // Clear URL params without reloading
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   const handleSubmit = async (url: string, mode: InputMode) => {
     // Check auth first

@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "node node_modules/typescript/bin/tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "trigger:dev": "npx trigger.dev@latest dev",
+    "trigger:deploy": "npx trigger.dev@latest deploy"
   },
   "dependencies": {
     "@clerk/backend": "^3.2.8",
@@ -19,6 +21,8 @@
     "@remotion/player": "^4.0.448",
     "@remotion/transitions": "^4.0.448",
     "@stripe/stripe-js": "^9.1.0",
+    "@supabase/supabase-js": "^2.103.0",
+    "@trigger.dev/sdk": "^4.4.4",
     "@vercel/analytics": "^1.6.1",
     "@vercel/kv": "^3.0.0",
     "ai": "^6.0.61",
@@ -36,6 +40,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@trigger.dev/build": "^4.4.4",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
@@ -46,6 +51,8 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "supabase": "^2.90.0",
+    "trigger.dev": "^4.4.4",
     "typescript-eslint": "^8.46.4"
   }
 }
