@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../trigger.config.ts"],
+  "sourcesContent": ["import { defineConfig } from \"@trigger.dev/sdk/v3\";\nimport { puppeteer } from \"@trigger.dev/build/extensions/puppeteer\";\n\nexport default defineConfig({\n  project: \"proj_zpdwsrkbbwnyzcxwavkr\",\n  runtime: \"node\",\n  logLevel: \"log\",\n  dirs: [\"./src/jobs\"],\n  // The max compute seconds for each task before it's considered timed out\n  // Video generation needs more time: bundle + render + upload\n  maxDuration: 600, // 10 minutes for video generation tasks\n  retries: {\n    enabledInDev: true,\n    default: {\n      maxAttempts: 3,\n      factor: 1.8,\n      minTimeoutInMs: 1000,\n      maxTimeoutInMs: 30000,\n      randomize: true,\n    },\n  },\n  build: {},\n});\nexport const resolveEnvVars = undefined;"],
+  "mappings": ";;;;;;;;;;;;AAAA;AAGA,IAAO,yBAAQ,aAAa;AAAA,EAC1B,SAAS;AAAA,EACT,SAAS;AAAA,EACT,UAAU;AAAA,EACV,MAAM,CAAC,YAAY;AAAA;AAAA;AAAA,EAGnB,aAAa;AAAA;AAAA,EACb,SAAS;AAAA,IACP,cAAc;AAAA,IACd,SAAS;AAAA,MACP,aAAa;AAAA,MACb,QAAQ;AAAA,MACR,gBAAgB;AAAA,MAChB,gBAAgB;AAAA,MAChB,WAAW;AAAA,IACb;AAAA,EACF;AAAA,EACA,OAAO,CAAC;AACV,CAAC;AACM,IAAM,iBAAiB;",
+  "names": []
+}
