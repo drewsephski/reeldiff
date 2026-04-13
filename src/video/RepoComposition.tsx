@@ -1,9 +1,9 @@
 import { AbsoluteFill, Audio } from 'remotion';
-import { TransitionSeries, linearTiming, springTiming } from '@remotion/transitions';
+import { TransitionSeries, springTiming } from '@remotion/transitions';
 import { fade } from '@remotion/transitions/fade';
 import { slide } from '@remotion/transitions/slide';
 import { wipe } from '@remotion/transitions/wipe';
-// import { LightLeak } from '@remotion/light-leaks';
+import { LightLeak } from '@remotion/light-leaks';
 import type { RepoVideoScript } from '../types';
 import { RepoIntroScene } from './scenes/RepoIntroScene';
 import { HeadlineScene } from './scenes/HeadlineScene';
@@ -38,7 +38,7 @@ export const RepoComposition: React.FC<RepoVideoScript> = (props) => {
             forks={meta.forks}
             accentColor={style.accentColor}
           />
-          <CinematicOverlays showFilmGrain={true} showVignette={true} vignetteIntensity={0.3} />
+          <CinematicOverlays showVignette={true} vignetteIntensity={0.25} />
         </TransitionSeries.Sequence>
 
         {/* Intro to Headline: Slide from right */}
@@ -56,14 +56,19 @@ export const RepoComposition: React.FC<RepoVideoScript> = (props) => {
             accentColor={style.accentColor}
             tone={headlineTone}
           />
-          <CinematicOverlays showFilmGrain={true} showVignette={true} vignetteIntensity={0.35} />
+          <CinematicOverlays showVignette={true} vignetteIntensity={0.3} />
         </TransitionSeries.Sequence>
 
-        {/* Headline to Bullets: Wipe transition */}
+        {/* Headline to Bullets: Wipe transition with light leak */}
         <TransitionSeries.Transition
           presentation={wipe({ direction: 'from-left' })}
-          timing={linearTiming({ durationInFrames: TRANSITION_DURATION })}
+          timing={springTiming({ config: { damping: 150 }, durationInFrames: TRANSITION_DURATION })}
         />
+        <TransitionSeries.Overlay durationInFrames={20}>
+          <AbsoluteFill style={{ pointerEvents: 'none' }}>
+            <LightLeak seed={1} hueShift={getHueFromColor(style.accentColor)} />
+          </AbsoluteFill>
+        </TransitionSeries.Overlay>
 
         {/* Bullet Scenes with alternating transitions */}
         {summary.bullets.map((bullet, i) => (
@@ -73,15 +78,20 @@ export const RepoComposition: React.FC<RepoVideoScript> = (props) => {
           >
             <Audio src="/audio/pop.mp3" volume={0.4} />
             <BulletScene text={bullet} index={i} accentColor={style.accentColor} />
-            <CinematicOverlays showFilmGrain={true} showVignette={true} vignetteIntensity={0.3} />
+            <CinematicOverlays showVignette={true} vignetteIntensity={0.25} />
           </TransitionSeries.Sequence>
         ))}
 
-        {/* Bullets to Outro: Fade transition */}
+        {/* Bullets to Outro: Fade transition with light leak */}
         <TransitionSeries.Transition
           presentation={fade()}
           timing={springTiming({ config: { damping: 150 }, durationInFrames: TRANSITION_DURATION })}
         />
+        <TransitionSeries.Overlay durationInFrames={25}>
+          <AbsoluteFill style={{ pointerEvents: 'none' }}>
+            <LightLeak seed={2} hueShift={getHueFromColor(style.accentColor) + 30} />
+          </AbsoluteFill>
+        </TransitionSeries.Overlay>
 
         {/* Outro Scene */}
         <TransitionSeries.Sequence durationInFrames={OUTRO_DURATION}>
@@ -93,9 +103,38 @@ export const RepoComposition: React.FC<RepoVideoScript> = (props) => {
             stars={meta.stars}
             accentColor={style.accentColor}
           />
-          <CinematicOverlays showFilmGrain={true} showVignette={true} vignetteIntensity={0.4} />
+          <CinematicOverlays showVignette={true} vignetteIntensity={0.35} />
         </TransitionSeries.Sequence>
       </TransitionSeries>
     </AbsoluteFill>
   );
 };
+
+// Helper to get hue from hex color for light leaks
+function getHueFromColor(hexColor: string): number {
+  const hex = hexColor.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+
+  let h = 0;
+  if (d !== 0) {
+    switch (max) {
+      case r:
+        h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+        break;
+      case g:
+        h = ((b - r) / d + 2) / 6;
+        break;
+      case b:
+        h = ((r - g) / d + 4) / 6;
+        break;
+    }
+  }
+
+  return h * 360;
+}

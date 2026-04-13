@@ -76,10 +76,10 @@ export const CinematicOverlays: React.FC<{
   showLetterbox?: boolean;
   vignetteIntensity?: number;
 }> = ({
-  showFilmGrain = true,
+  showFilmGrain = false,
   showVignette = true,
   showLetterbox = false,
-  vignetteIntensity = 0.35,
+  vignetteIntensity = 0.25,
 }) => {
   const vignette = useAnimatedVignette(vignetteIntensity);
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle2,
@@ -46,6 +47,7 @@ export function SetupWizard({
   onComplete,
 }: SetupWizardProps) {
   const supabase = useSupabase();
+  const navigate = useNavigate();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -546,6 +548,21 @@ export function SetupWizard({
           )}
         </button>
       </div>
+
+      {currentStepIndex === steps.length - 1 && (
+        <div className="settings-link-container">
+          <button
+            onClick={() => {
+              onComplete();
+              navigate(`/projects/${projectId}/settings`);
+            }}
+            className="btn-settings-link"
+          >
+            <ExternalLink size={14} />
+            View all settings
+          </button>
+        </div>
+      )}
 
       <style>{`
         .setup-wizard {
@@ -1261,6 +1278,34 @@ export function SetupWizard({
         .step-indicator {
           font-size: 0.8125rem;
           color: var(--ink-muted);
+        }
+
+        .settings-link-container {
+          padding: var(--space-4) var(--space-6);
+          border-top: 1px solid var(--border);
+          background: var(--bg-secondary);
+          text-align: center;
+        }
+
+        .btn-settings-link {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--space-2);
+          padding: var(--space-3) var(--space-4);
+          background: transparent;
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          color: var(--ink-secondary);
+          font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .btn-settings-link:hover {
+          background: var(--border);
+          color: var(--ink-primary);
+          border-color: var(--border-strong);
         }
       `}</style>
     </div>

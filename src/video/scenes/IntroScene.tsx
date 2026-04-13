@@ -522,8 +522,8 @@ export const IntroScene: React.FC<IntroSceneProps> = ({
         })}
       </div>
 
-      {/* Cinematic overlays */}
-      <CinematicOverlays showFilmGrain={true} showVignette={true} vignetteIntensity={0.3} />
+      {/* Cinematic overlays - clean without grain */}
+      <CinematicOverlays showVignette={true} vignetteIntensity={0.25} />
     </AbsoluteFill>
   );
 };

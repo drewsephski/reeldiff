@@ -177,8 +177,18 @@ export const HeadlineScene: React.FC<HeadlineSceneProps> = ({
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
-  // Split headline into words for kinetic animation
-  const words = headline.split(' ');
+  // Typewriter effect for headline
+  const charsPerFrame = 0.8;
+  const typewriterProgress = Math.min(headline.length, Math.floor(frame * charsPerFrame));
+  const visibleText = headline.slice(0, typewriterProgress);
+  const isTypingComplete = typewriterProgress >= headline.length;
+
+  // Blinking cursor animation
+  const cursorBlink = Math.sin(frame * 0.4) > 0;
+  const showCursor = !isTypingComplete || (isTypingComplete && cursorBlink);
+
+  // Split visible text into words for kinetic animation
+  const words = visibleText.split(' ');
   const kineticWords = useEmphasisWords(words, 15, 5, 3);
 
   // 3D perspective tilt for depth
@@ -317,7 +327,7 @@ export const HeadlineScene: React.FC<HeadlineSceneProps> = ({
           {emoji}
         </div>
 
-        {/* Headline with enhanced kinetic typography */}
+        {/* Headline with typewriter and kinetic typography */}
         <h1
           style={{
             fontSize: typography.display.md,
@@ -328,6 +338,7 @@ export const HeadlineScene: React.FC<HeadlineSceneProps> = ({
             letterSpacing: typography.tracking.tight,
             maxWidth: 1200,
             margin: 0,
+            position: 'relative',
           }}
         >
           {kineticWords.map((wordData: { word: string; transform: string; opacity: number; isEmphasis: boolean }, i: number) => (
@@ -344,12 +355,24 @@ export const HeadlineScene: React.FC<HeadlineSceneProps> = ({
                 opacity: wordData.opacity,
                 transform: wordData.transform,
                 fontSize: wordData.isEmphasis ? '1.05em' : '1em',
-                transition: 'transform 0.15s ease-out',
               }}
             >
               {wordData.word}
             </span>
           ))}
+          {/* Blinking typewriter cursor */}
+          <span
+            style={{
+              display: 'inline-block',
+              width: 4,
+              height: '1em',
+              backgroundColor: accentColor,
+              marginLeft: 4,
+              opacity: showCursor ? 1 : 0,
+              boxShadow: `0 0 10px ${accentColor}`,
+              verticalAlign: 'middle',
+            }}
+          />
         </h1>
 
         {/* Enhanced animated underline with glow */}
