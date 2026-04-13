@@ -1,12 +1,16 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
 
+console.log("[WEBHOOK] Module loaded");
+
 // Disable body parsing to get raw body for signature verification
 export const config = {
   api: {
     bodyParser: false,
   },
 };
+
+console.log("[WEBHOOK] Config exported");
 
 // Helper to read raw body from request stream
 async function getRawBody(req: VercelRequest): Promise<Buffer> {
