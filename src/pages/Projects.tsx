@@ -5,7 +5,7 @@ import { Plus, Settings, Video, ExternalLink, Trash2, AlertCircle, Film, Clapper
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase, type Project, type WebhookConfig } from '../lib/supabase';
 import { Navbar } from '../components/Navbar';
-import { SetupWalkthrough } from '../components/SetupWalkthrough';
+import { SetupWizard } from '../components/SetupWizard';
 
 interface ProjectWithConfig extends Project {
   webhook_configs?: WebhookConfig[];
@@ -432,7 +432,7 @@ export default function Projects() {
               exit={{ opacity: 0, scale: 0.95, x: '-50%', y: '-50%' }}
             >
 
-              <SetupWalkthrough
+              <SetupWizard
                 projectId={newlyCreatedProject.id}
                 repoOwner={newlyCreatedProject.repo_owner}
                 repoName={newlyCreatedProject.repo_name}
