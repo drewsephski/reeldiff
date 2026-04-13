@@ -69,6 +69,7 @@ export function VideoModal({ videoData, isOpen, onClose }: VideoModalProps) {
               borderRadius: 8,
             }}
             controls
+            acknowledgeRemotionLicense
           />
         </div>
 
