@@ -47,17 +47,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Read raw body for signature verification
-  const rawBody = await getRawBody(req);
+  let rawBody: Buffer;
+  try {
+    rawBody = await getRawBody(req);
+  } catch (err) {
+    console.error("[WEBHOOK] Failed to read request body:", err);
+    return res.status(400).json({ error: "Failed to read request body" });
+  }
+
+  if (!rawBody || rawBody.length === 0) {
+    console.error("[WEBHOOK] Empty request body");
+    return res.status(400).json({ error: "Empty request body" });
+  }
 
   // Verify webhook signature with GitHub App secret
   const webhookSecret = process.env.GITHUB_WEBHOOK_SECRET;
   if (webhookSecret) {
-    const isValid = verifyWebhookSignature(rawBody, signature, webhookSecret);
-    if (!isValid) {
-      return res.status(401).json({ error: "Invalid signature" });
+    try {
+      const isValid = verifyWebhookSignature(rawBody, signature, webhookSecret);
+      if (!isValid) {
+        return res.status(401).json({ error: "Invalid signature" });
+      }
+    } catch (err) {
+      console.error("[WEBHOOK] Signature verification error:", err);
+      return res.status(401).json({ error: "Invalid signature format" });
     }
   } else {
-    console.warn("GITHUB_WEBHOOK_SECRET not set, skipping signature verification");
+    console.warn("[WEBHOOK] GITHUB_WEBHOOK_SECRET not set, skipping signature verification");
   }
 
   console.log(`Received GitHub webhook: ${event} (delivery: ${deliveryId})`);
@@ -129,7 +145,21 @@ function verifyWebhookSignature(
   signature: string,
   secret: string
 ): boolean {
+  // Validate signature format
+  if (!signature.startsWith("sha256=")) {
+    throw new Error("Invalid signature format - must start with sha256=");
+  }
+  
   const hmac = crypto.createHmac("sha256", secret);
   const digest = "sha256=" + hmac.update(payload).digest("hex");
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest));
+  
+  // Ensure buffers are same length for timingSafeEqual
+  const sigBuf = Buffer.from(signature);
+  const digestBuf = Buffer.from(digest);
+  
+  if (sigBuf.length !== digestBuf.length) {
+    throw new Error("Signature length mismatch");
+  }
+  
+  return crypto.timingSafeEqual(sigBuf, digestBuf);
 }
