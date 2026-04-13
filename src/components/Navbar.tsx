@@ -1,3 +1,4 @@
+import { SignInButton, UserButton, useAuth } from '@clerk/clerk-react';
 import { CreditDisplay } from './CreditDisplay';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -6,6 +7,8 @@ interface NavbarProps {
 }
 
 export function Navbar({ onBuyCredits }: NavbarProps) {
+  const { isSignedIn } = useAuth();
+
   return (
     <nav className="navbar">
       <div className="navbar-content">
@@ -19,7 +22,16 @@ export function Navbar({ onBuyCredits }: NavbarProps) {
 
         <div className="nav-actions">
           <ThemeToggle />
-          <CreditDisplay onBuyCredits={onBuyCredits} />
+          {isSignedIn ? (
+            <>
+              <CreditDisplay onBuyCredits={onBuyCredits} />
+              <UserButton afterSignOutUrl="/" />
+            </>
+          ) : (
+            <SignInButton mode="modal">
+              <button className="sign-in-btn">Sign In</button>
+            </SignInButton>
+          )}
         </div>
       </div>
 
@@ -61,6 +73,23 @@ export function Navbar({ onBuyCredits }: NavbarProps) {
           gap: 0.75rem;
         }
 
+        .sign-in-btn {
+          padding: 0.5rem 1rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--ink-primary);
+          background: var(--bg-secondary);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .sign-in-btn:hover {
+          background: var(--bg-tertiary);
+          border-color: var(--border-strong);
+        }
+
         @media (max-width: 640px) {
           .navbar-content {
             padding: 0.75rem 1rem;
@@ -68,6 +97,11 @@ export function Navbar({ onBuyCredits }: NavbarProps) {
 
           .logo-text {
             font-size: 1.25rem;
+          }
+
+          .sign-in-btn {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8125rem;
           }
         }
       `}</style>
