@@ -47,8 +47,30 @@ vercel dev       # Full app with API (requires .env.local with OPENAI_API_KEY)
 
 ## Environment Variables
 
-- `OPENAI_API_KEY`: Required for API functionality (set in `.env.local` locally, Vercel dashboard for production)
+### Required for Core Functionality
+
+- `OPENROUTER_API_KEY`: Required for AI summary generation (OpenRouter provides access to multiple LLMs)
+
+### Required for Payment System
+
+- `STRIPE_SECRET_KEY`: Stripe secret key (starts with `sk_test_` or `sk_live_`)
+- `STRIPE_PUBLISHABLE_KEY`: Stripe publishable key for frontend (starts with `pk_test_` or `pk_live_`)
+- `STRIPE_WEBHOOK_SECRET`: Webhook secret for verifying Stripe events (starts with `whsec_`)
+- `PRICE_STARTER`: Stripe Price ID for the $5/5-credits tier
+- `PRICE_PRO`: Stripe Price ID for the $15/20-credits tier
+- `KV_URL`, `KV_REST_API_URL`, `KV_REST_API_TOKEN`: Vercel KV credentials (auto-populated when adding KV to project)
+
+## Payment System
+
+The app includes a credit-based payment system:
+
+- **Free tier**: 1 free video per device
+- **Starter**: $5 for 5 credits
+- **Pro**: $15 for 20 credits
+- Credits are device-tracked using fingerprinting (no auth required)
+- Stripe Checkout handles payments, webhook adds credits to Vercel KV
 
 ## Workflow
 
 - Always run `npm run lint` before finishing any task to verify no lint errors were introduced
+- Run `npm run build` to verify TypeScript compiles correctly

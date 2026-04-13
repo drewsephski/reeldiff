@@ -3,8 +3,15 @@ import { config } from 'dotenv';
 import { generateText, Output } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { z } from 'zod';
+import { kv } from '@vercel/kv';
 
 config({ path: '.env.local' });
+
+interface UserCredits {
+  credits: number;
+  freeUsed: boolean;
+  createdAt: string;
+}
 
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
@@ -53,9 +60,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { repoUrl } = req.body;
+    const { repoUrl, fingerprint } = req.body;
     if (!repoUrl || typeof repoUrl !== 'string') {
       return res.status(400).json({ error: 'repoUrl is required' });
+    }
+    if (!fingerprint || typeof fingerprint !== 'string') {
+      return res.status(400).json({ error: 'fingerprint is required' });
+    }
+
+    // Check credits
+    const userKey = `user:${fingerprint}`;
+    const userData = await kv.get<UserCredits>(userKey);
+
+    if (userData && userData.freeUsed && userData.credits <= 0) {
+      return res.status(403).json({
+        error: 'No credits remaining. Please purchase more credits to continue.',
+        code: 'INSUFFICIENT_CREDITS',
+      });
     }
 
     const parsed = parseRepoUrl(repoUrl);

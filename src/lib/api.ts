@@ -1,13 +1,15 @@
 import type { VideoScript, RepoVideoScript } from '../types';
+import { getDeviceFingerprint } from './fingerprint';
 
 export async function analyzePR(prUrl: string): Promise<VideoScript> {
   let response: Response;
+  const fingerprint = getDeviceFingerprint();
 
   try {
     response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prUrl }),
+      body: JSON.stringify({ prUrl, fingerprint }),
     });
   } catch {
     throw new Error('Network error - please check your connection');
@@ -34,12 +36,13 @@ export async function analyzePR(prUrl: string): Promise<VideoScript> {
 
 export async function analyzeRepo(repoUrl: string): Promise<RepoVideoScript> {
   let response: Response;
+  const fingerprint = getDeviceFingerprint();
 
   try {
     response = await fetch('/api/analyze-repo', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ repoUrl }),
+      body: JSON.stringify({ repoUrl, fingerprint }),
     });
   } catch {
     throw new Error('Network error - please check your connection');

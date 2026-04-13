@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { InputForm } from './components/InputForm';
 import { LoadingState } from './components/LoadingState';
 import { VideoModal } from './components/VideoModal';
+import { CreditDisplay } from './components/CreditDisplay';
+import { PricingModal } from './components/PricingModal';
+import { PaywallModal } from './components/PaywallModal';
 import { analyzePR, analyzeRepo } from './lib/api';
+import { deductCredit, getCredits, hasCredits } from './lib/credits';
 import type { VideoData } from './types';
 import { isRepoVideoScript } from './types';
 
@@ -15,17 +19,79 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Credit system state
+  const [isPricingOpen, setIsPricingOpen] = useState(false);
+  const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+
+  // Load credits on mount and after successful purchase
+  const loadCredits = useCallback(async () => {
+    try {
+      await getCredits();
+      // CreditDisplay component will reload itself via global function
+      const reloadFn = (window as Window & { reloadCredits?: () => void }).reloadCredits;
+      if (reloadFn) reloadFn();
+    } catch (err) {
+      console.error('Failed to load credits:', err);
+    }
+  }, []);
+
+  // Initial load
+  useEffect(() => {
+    loadCredits();
+  }, [loadCredits]);
+
+  // Handle purchase success from URL params
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+      // Clear URL params
+      window.history.replaceState({}, '', window.location.pathname);
+      // Reload credits
+      void loadCredits();
+    }
+  }, [loadCredits]);
+
   const handleSubmit = async (url: string, mode: InputMode) => {
+    // Check credits first
+    let currentCredits: { credits: number; freeUsed: boolean };
+    try {
+      currentCredits = await getCredits();
+    } catch {
+      setError('Failed to check credits. Please try again.');
+      return;
+    }
+
+    if (!hasCredits(currentCredits)) {
+      setIsPaywallOpen(true);
+      return;
+    }
+
     setState('loading');
     setError(null);
 
     try {
       const data = mode === 'pr' ? await analyzePR(url) : await analyzeRepo(url);
+
+      // Deduct credit after successful generation
+      try {
+        await deductCredit();
+        // Reload credits to update UI
+        await loadCredits();
+      } catch (deductErr) {
+        console.error('Failed to deduct credit:', deductErr);
+        // Continue showing video even if deduction failed (graceful degradation)
+      }
+
       setVideoData(data);
       setState('preview');
       setIsModalOpen(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      // Handle insufficient credits error from backend
+      if (err instanceof Error && err.message.includes('INSUFFICIENT_CREDITS')) {
+        setIsPaywallOpen(true);
+      } else {
+        setError(err instanceof Error ? err.message : 'Something went wrong');
+      }
       setState('input');
     }
   };
@@ -47,6 +113,9 @@ function App() {
             <path d="M10 12h12M10 16h8M10 20h5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
           </svg>
           <span className="logo-text">ReelDiff</span>
+        </div>
+        <div className="header-actions">
+          <CreditDisplay onBuyCredits={() => setIsPricingOpen(true)} />
         </div>
       </header>
 
@@ -147,6 +216,14 @@ function App() {
         </a>
       </footer>
 
+      {/* Modals */}
+      <PricingModal isOpen={isPricingOpen} onClose={() => setIsPricingOpen(false)} />
+      <PaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setIsPaywallOpen(false)}
+        onBuyCredits={() => setIsPricingOpen(true)}
+      />
+
       <style>{`
         .app-container {
           min-height: 100vh;
@@ -157,6 +234,14 @@ function App() {
 
         .app-header {
           padding: var(--space-6) var(--space-6) 0;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .header-actions {
+          display: flex;
+          align-items: center;
         }
 
         .logo-mark {
