@@ -1,3 +1,4 @@
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { SignInButton, UserButton, useAuth } from '@clerk/clerk-react';
 import { CreditDisplay } from './CreditDisplay';
 import { ThemeToggle } from './ThemeToggle';
@@ -8,20 +9,37 @@ interface NavbarProps {
 
 export function Navbar({ onBuyCredits }: NavbarProps) {
   const { isSignedIn } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handlePricingClick = () => {
+    if (location.pathname === '/') {
+      // Already on home page, just open the modal
+      onBuyCredits();
+    } else {
+      // Navigate to home with pricing param
+      navigate('/?pricing=true');
+    }
+  };
 
   return (
     <nav className="navbar">
       <div className="navbar-content">
-        <div className="logo">
+        <Link to="/" className="logo">
           <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect width="32" height="32" rx="8" fill="var(--accent)"/>
             <path d="M10 12h12M10 16h8M10 20h5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
           </svg>
           <span className="logo-text">ReelDiff</span>
-        </div>
+        </Link>
 
         <div className="nav-actions">
-          <button className="pricing-link" onClick={onBuyCredits}>
+          {isSignedIn && (
+            <Link to="/projects" className="nav-link">
+              Projects
+            </Link>
+          )}
+          <button className="pricing-link" onClick={handlePricingClick}>
             Pricing
           </button>
           <ThemeToggle />
@@ -60,6 +78,7 @@ export function Navbar({ onBuyCredits }: NavbarProps) {
           display: flex;
           align-items: center;
           gap: 0.75rem;
+          text-decoration: none;
         }
 
         .logo-text {
@@ -88,6 +107,19 @@ export function Navbar({ onBuyCredits }: NavbarProps) {
         }
 
         .pricing-link:hover {
+          color: var(--accent);
+        }
+
+        .nav-link {
+          padding: 0.5rem 1rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--ink-secondary);
+          text-decoration: none;
+          transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
           color: var(--accent);
         }
 
