@@ -1,6 +1,23 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
 
+// Disable body parsing to get raw body for signature verification
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+// Helper to read raw body from request stream
+async function getRawBody(req: VercelRequest): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on("data", (chunk) => chunks.push(chunk));
+    req.on("end", () => resolve(Buffer.concat(chunks)));
+    req.on("error", reject);
+  });
+}
+
 // This endpoint receives GitHub webhooks and triggers Trigger.dev tasks
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Only accept POST requests
@@ -17,11 +34,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Missing webhook headers" });
   }
 
-  // TODO: Verify webhook signature with GitHub App secret
-  // const isValid = verifyWebhookSignature(req.body, signature, process.env.GITHUB_WEBHOOK_SECRET);
-  // if (!isValid) {
-  //   return res.status(401).json({ error: "Invalid signature" });
-  // }
+  // Read raw body for signature verification
+  const rawBody = await getRawBody(req);
+
+  // Verify webhook signature with GitHub App secret
+  const webhookSecret = process.env.GITHUB_WEBHOOK_SECRET;
+  if (webhookSecret) {
+    const isValid = verifyWebhookSignature(rawBody, signature, webhookSecret);
+    if (!isValid) {
+      return res.status(401).json({ error: "Invalid signature" });
+    }
+  } else {
+    console.warn("GITHUB_WEBHOOK_SECRET not set, skipping signature verification");
+  }
 
   console.log(`Received GitHub webhook: ${event} (delivery: ${deliveryId})`);
 
@@ -31,23 +56,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ message: "Event type not supported", event });
   }
 
+  // Parse the JSON body after verification
+  let payload;
+  try {
+    payload = JSON.parse(rawBody.toString("utf-8"));
+  } catch {
+    return res.status(400).json({ error: "Invalid JSON body" });
+  }
+
   // Trigger the Trigger.dev task
   try {
     const { tasks } = await import("@trigger.dev/sdk/v3");
     
     // Trigger the webhook processing task
     const result = await tasks.trigger("process-github-webhook", {
-      action: req.body.action,
-      pull_request: req.body.pull_request,
-      repository: req.body.repository,
-      sender: req.body.sender,
+      action: payload.action,
+      pull_request: payload.pull_request,
+      repository: payload.repository,
+      sender: payload.sender,
     });
 
     console.log("Triggered process-github-webhook task:", {
       runId: result.id,
       event,
-      action: req.body.action,
-      repository: req.body.repository?.full_name,
+      action: payload.action,
+      repository: payload.repository?.full_name,
     });
 
     return res.status(202).json({
@@ -66,10 +99,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-// Helper function to verify GitHub webhook signature (currently unused)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// Helper function to verify GitHub webhook signature
 function verifyWebhookSignature(
-  payload: string,
+  payload: Buffer,
   signature: string,
   secret: string
 ): boolean {
