@@ -1,10 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { config } from 'dotenv';
 import { generateText, Output } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { z } from 'zod';
 
 config({ path: '.env.local' });
+
+const openrouter = createOpenRouter({
+  apiKey: process.env.OPENROUTER_API_KEY,
+});
 
 const summarySchema = z.object({
   headline: z.string().describe('A catchy, short headline (max 10 words) that captures the essence of this PR'),
@@ -14,8 +18,6 @@ const summarySchema = z.object({
   accentColor: z.string().describe('A hex color that matches the vibe (bright, playful colors work best)'),
   tone: z.enum(['celebratory', 'relief', 'technical', 'minor']).describe('celebratory for new features, relief for bug fixes, technical for refactors, minor for small changes'),
 });
-
-type OpenAISummary = z.infer<typeof summarySchema>;
 
 function parsePrUrl(url: string): { owner: string; repo: string; number: number } | null {
   const match = url.match(/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/);
@@ -40,8 +42,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Fetch PR data
+    const prApiUrl = `https://api.github.com/repos/${parsed.owner}/${parsed.repo}/pulls/${parsed.number}`;
+    console.log('Fetching PR:', prApiUrl);
+
     const [prRes, filesRes] = await Promise.all([
-      fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/pulls/${parsed.number}`, {
+      fetch(prApiUrl, {
         headers: { Accept: 'application/vnd.github.v3+json' },
       }),
       fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/pulls/${parsed.number}/files`, {
@@ -49,8 +54,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }),
     ]);
 
+    console.log('GitHub PR response status:', prRes.status);
+
     if (!prRes.ok) {
-      return res.status(prRes.status).json({ error: prRes.status === 404 ? 'PR not found or is private' : 'Failed to fetch PR' });
+      const errorText = await prRes.text();
+      console.error('GitHub API error:', prRes.status, errorText);
+      return res.status(prRes.status).json({ 
+        error: prRes.status === 404 ? 'PR not found or is private' : `Failed to fetch PR: ${prRes.status}` 
+      });
     }
 
     const pr = await prRes.json();
@@ -68,7 +79,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     // Generate AI summary
-    const truncatedFiles = files.slice(0, 10).map((f: any) => ({
+    const truncatedFiles = files.slice(0, 10).map((f: { filename: string; additions: number; deletions: number; patch?: string }) => ({
       filename: f.filename,
       additions: f.additions,
       deletions: f.deletions,
@@ -84,17 +95,27 @@ Total Additions: ${pr.additions}
 Total Deletions: ${pr.deletions}
 
 Changed files:
-${truncatedFiles.map((f: any) => `- ${f.filename} (+${f.additions}/-${f.deletions})`).join('\n')}`;
+${truncatedFiles.map((f: { filename: string; additions: number; deletions: number }) => `- ${f.filename} (+${f.additions}/-${f.deletions})`).join('\n')}`;
 
-    const { output } = await generateText({
-      model: openai('gpt-5.2'),
-      output: Output.object({ schema: summarySchema }),
-      prompt,
-      temperature: 0.7,
-    });
+    // Use generateText with Output.object() for structured output
+    console.log('Calling OpenRouter with model: google/gemini-3.1-flash-lite-preview');
+    console.log('Prompt length:', prompt.length);
 
-    if (!output) {
-      throw new Error('Failed to generate summary');
+    let output;
+    try {
+      const result = await generateText({
+        model: openrouter('google/gemini-3.1-flash-lite-preview'),
+        output: Output.object({
+          schema: summarySchema,
+        }),
+        prompt,
+        temperature: 0.7,
+      });
+      output = result.output;
+      console.log('OpenRouter success:', output);
+    } catch (aiError) {
+      console.error('OpenRouter error:', aiError);
+      throw aiError;
     }
 
     return res.status(200).json({
@@ -110,12 +131,12 @@ ${truncatedFiles.map((f: any) => `- ${f.filename} (+${f.additions}/-${f.deletion
         tone: output.tone,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Handler error:', error);
     return res.status(500).json({
-      error: error.message,
-      cause: error.cause?.message,
-      code: error.cause?.code,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      cause: error instanceof Error ? (error.cause as { message?: string; code?: string })?.message : undefined,
+      code: error instanceof Error ? (error.cause as { message?: string; code?: string })?.code : undefined,
     });
   }
 }

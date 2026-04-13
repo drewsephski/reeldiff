@@ -35,81 +35,21 @@ export function VideoModal({ videoData, isOpen, onClose }: VideoModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 100,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        animation: 'fade-in 0.3s ease-out',
-      }}
-    >
+    <div className="video-modal">
       {/* Backdrop */}
-      <div
-        onClick={onClose}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.85)',
-          backdropFilter: 'blur(8px)',
-        }}
-      />
+      <div className="modal-backdrop" onClick={onClose} />
 
       {/* Modal content */}
-      <div
-        style={{
-          position: 'relative',
-          width: '90vw',
-          maxWidth: 1200,
-          animation: 'scale-in 0.3s ease-out',
-        }}
-      >
+      <div className="modal-content">
         {/* Close button */}
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: -48,
-            right: 0,
-            width: 40,
-            height: 40,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(255, 255, 255, 0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '50%',
-            color: 'white',
-            fontSize: 20,
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-            e.currentTarget.style.transform = 'scale(1.1)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
-        >
-          ✕
+        <button onClick={onClose} className="modal-close" aria-label="Close video">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+          </svg>
         </button>
 
         {/* Video container */}
-        <div
-          style={{
-            borderRadius: 20,
-            overflow: 'hidden',
-            boxShadow: `
-              0 0 0 1px rgba(139, 92, 246, 0.3),
-              0 25px 80px -10px rgba(0, 0, 0, 0.7),
-              0 0 120px -20px rgba(139, 92, 246, 0.4)
-            `,
-          }}
-        >
+        <div className="video-container">
           <Player
             component={PatchPlayComposition as unknown as ComponentType<Record<string, unknown>>}
             inputProps={videoData as unknown as Record<string, unknown>}
@@ -120,12 +60,101 @@ export function VideoModal({ videoData, isOpen, onClose }: VideoModalProps) {
             autoPlay
             style={{
               width: '100%',
-              borderRadius: 20,
+              borderRadius: 8,
             }}
             controls
           />
         </div>
+
+        {/* Video info */}
+        <div className="video-meta">
+          <span className="text-caption-accent">Generated video</span>
+          <span className="text-small">
+            {videoData.meta.repoName} · PR #{videoData.meta.prNumber}
+          </span>
+        </div>
       </div>
+
+      <style>{`
+        .video-modal {
+          position: fixed;
+          inset: 0;
+          z-index: 100;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: var(--space-6);
+          animation: fade-in 0.3s var(--ease-out-quart);
+        }
+
+        .modal-backdrop {
+          position: absolute;
+          inset: 0;
+          background: rgba(26, 22, 18, 0.9);
+          backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+          position: relative;
+          width: 100%;
+          max-width: 1100px;
+          animation: reveal-scale 0.3s var(--ease-out-expo);
+        }
+
+        .modal-close {
+          position: absolute;
+          top: -48px;
+          right: 0;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--ink-muted);
+          background: transparent;
+          border: 1px solid var(--border);
+          border-radius: 50%;
+          cursor: pointer;
+          transition: all var(--duration-fast) var(--ease-out-quart);
+        }
+
+        .modal-close:hover {
+          color: var(--ink-primary);
+          background: var(--bg-secondary);
+          border-color: var(--border-strong);
+        }
+
+        .video-container {
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 25px 60px -12px rgba(26, 22, 18, 0.4);
+        }
+
+        .video-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: var(--space-4);
+          padding: var(--space-3) 0;
+          border-top: 1px solid var(--border);
+        }
+
+        @media (max-width: 768px) {
+          .video-modal {
+            padding: var(--space-4);
+          }
+
+          .modal-close {
+            top: -40px;
+          }
+
+          .video-meta {
+            flex-direction: column;
+            gap: var(--space-2);
+            align-items: flex-start;
+          }
+        }
+      `}</style>
     </div>
   );
 }

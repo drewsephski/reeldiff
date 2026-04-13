@@ -7,38 +7,6 @@ import type { VideoScript } from './types';
 
 type AppState = 'input' | 'loading' | 'preview';
 
-// Floating orb component for background decoration
-const FloatingOrb = ({
-  color,
-  size,
-  top,
-  left,
-  delay = 0
-}: {
-  color: string;
-  size: number;
-  top: string;
-  left: string;
-  delay?: number;
-}) => (
-  <div
-    style={{
-      position: 'absolute',
-      top,
-      left,
-      width: size,
-      height: size,
-      borderRadius: '50%',
-      background: `radial-gradient(circle at 30% 30%, ${color}, transparent 70%)`,
-      filter: 'blur(40px)',
-      opacity: 0.6,
-      animation: `float ${8 + delay}s ease-in-out infinite`,
-      animationDelay: `${delay}s`,
-      pointerEvents: 'none',
-    }}
-  />
-);
-
 function App() {
   const [state, setState] = useState<AppState>('input');
   const [videoData, setVideoData] = useState<VideoScript | null>(null);
@@ -68,119 +36,42 @@ function App() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0A0A1B 0%, #12122A 50%, #0A0A1B 100%)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px 20px',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Floating background orbs */}
-      <FloatingOrb color="#FF6B6B" size={400} top="-10%" left="-5%" delay={0} />
-      <FloatingOrb color="#8B5CF6" size={350} top="60%" left="80%" delay={2} />
-      <FloatingOrb color="#FBBF24" size={300} top="70%" left="-10%" delay={4} />
-      <FloatingOrb color="#22D3EE" size={250} top="-5%" left="70%" delay={1} />
-
-      {/* Subtle grid pattern */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: `
-            linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px)
-          `,
-          backgroundSize: '60px 60px',
-          pointerEvents: 'none',
-        }}
-      />
-
-      {/* Content container */}
-      <div
-        style={{
-          position: 'relative',
-          zIndex: 10,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          width: '100%',
-          maxWidth: 1000,
-        }}
-      >
-        {/* Logo / Title */}
-        <div
-          style={{
-            marginBottom: 16,
-            animation: 'fade-up 0.8s ease-out forwards',
-          }}
-        >
-          <h1
-            style={{
-              fontFamily: "'Bricolage Grotesque', system-ui, sans-serif",
-              fontSize: 'clamp(3rem, 8vw, 5rem)',
-              fontWeight: 800,
-              background: 'linear-gradient(135deg, #FF6B6B 0%, #FBBF24 25%, #8B5CF6 50%, #22D3EE 75%, #FF6B6B 100%)',
-              backgroundSize: '200% 200%',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              animation: 'gradient-shift 8s ease infinite',
-              letterSpacing: '-0.03em',
-              textAlign: 'center',
-            }}
-          >
-            PatchPlay
-          </h1>
+    <div className="app-container">
+      {/* Header */}
+      <header className="app-header animate-reveal">
+        <div className="logo-mark">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="32" height="32" rx="8" fill="var(--accent)"/>
+            <path d="M10 12h12M10 16h8M10 20h5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          <span className="logo-text">ReelDiff</span>
         </div>
+      </header>
 
-        {/* Tagline */}
-        <p
-          style={{
-            fontFamily: "'DM Sans', system-ui, sans-serif",
-            fontSize: 'clamp(1rem, 2.5vw, 1.25rem)',
-            color: 'rgba(255, 255, 255, 0.5)',
-            marginBottom: 48,
-            textAlign: 'center',
-            animation: 'fade-up 0.8s ease-out 0.1s forwards',
-            opacity: 0,
-            animationFillMode: 'forwards',
-          }}
-        >
-          Turn any GitHub PR into a story
-        </p>
-
+      {/* Main content */}
+      <main className="app-main">
         {state === 'input' && (
-          <div
-            style={{
-              width: '100%',
-              maxWidth: 600,
-              animation: 'slide-up 0.6s ease-out forwards',
-            }}
-          >
-            <InputForm onSubmit={handleSubmit} isLoading={false} />
-            {error && (
-              <div
-                style={{
-                  marginTop: 20,
-                  padding: '16px 20px',
-                  background: 'rgba(248, 113, 113, 0.1)',
-                  border: '1px solid rgba(248, 113, 113, 0.3)',
-                  borderRadius: 12,
-                  color: '#f87171',
-                  fontSize: 14,
-                  textAlign: 'center',
-                  animation: 'fade-up 0.4s ease-out',
-                }}
-              >
-                {error}
-              </div>
-            )}
+          <div className="input-section">
+            <div className="hero-text animate-reveal">
+              <span className="text-caption-accent">Diff to Reel</span>
+              <h1 className="text-display">
+                Turn code changes<br />
+                <span className="text-display-italic">into visual stories</span>
+              </h1>
+              <p className="text-lead hero-subtitle">
+                Paste a GitHub PR link. Get a shareable video in seconds.
+              </p>
+            </div>
+
+            <div className="form-wrapper animate-reveal-delay-1">
+              <InputForm onSubmit={handleSubmit} isLoading={false} />
+
+              {error && (
+                <div className="error-message animate-fade">
+                  {error}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -194,114 +85,41 @@ function App() {
               onClose={() => setIsModalOpen(false)}
             />
 
-            {/* Video info card - visible when modal is closed */}
             {!isModalOpen && (
-              <div
-                style={{
-                  width: '100%',
-                  maxWidth: 500,
-                  animation: 'fade-up 0.4s ease-out',
-                }}
-              >
-                <div
-                  style={{
-                    padding: '24px',
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: 16,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 20,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div className="result-section animate-reveal">
+                <div className="result-card card">
+                  <div className="result-header">
                     <img
                       src={videoData.meta.authorAvatar}
                       alt={videoData.meta.author}
-                      style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: '50%',
-                        border: '2px solid rgba(139, 92, 246, 0.5)',
-                      }}
+                      className="avatar"
                     />
-                    <div>
-                      <div
-                        style={{
-                          fontFamily: "'Bricolage Grotesque', system-ui, sans-serif",
-                          fontWeight: 600,
-                          fontSize: 16,
-                          color: 'white',
-                        }}
-                      >
+                    <div className="result-meta">
+                      <span className="text-title" style={{ fontSize: '1.125rem' }}>
                         {videoData.meta.repoName}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 14,
-                          color: 'rgba(255, 255, 255, 0.4)',
-                        }}
-                      >
+                      </span>
+                      <span className="text-label">
                         PR #{videoData.meta.prNumber} by @{videoData.meta.author}
-                      </div>
+                      </span>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: 12, width: '100%' }}>
+                  <div className="result-actions">
                     <button
                       onClick={() => setIsModalOpen(true)}
-                      style={{
-                        flex: 1,
-                        padding: '12px 20px',
-                        fontSize: 14,
-                        fontWeight: 600,
-                        fontFamily: "'DM Sans', system-ui, sans-serif",
-                        border: 'none',
-                        borderRadius: 10,
-                        background: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)',
-                        color: 'white',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 8px 20px -4px rgba(139, 92, 246, 0.5)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
+                      className="btn-primary"
                     >
-                      Watch again
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 2.5a.5.5 0 0 0-1 0v5.793L5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8 8.293V2.5z"/>
+                        <path d="M3.5 9.5a.5.5 0 0 0-1 0v2A2.5 2.5 0 0 0 5 14h6a2.5 2.5 0 0 0 2.5-2.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 1 11 13H5a1.5 1.5 0 0 1-1.5-1.5v-2z"/>
+                      </svg>
+                      Watch video
                     </button>
                     <button
                       onClick={handleReset}
-                      style={{
-                        flex: 1,
-                        padding: '12px 20px',
-                        fontSize: 14,
-                        fontWeight: 500,
-                        fontFamily: "'DM Sans', system-ui, sans-serif",
-                        border: '1px solid rgba(255, 255, 255, 0.15)',
-                        borderRadius: 10,
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        color: 'rgba(255, 255, 255, 0.7)',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                        e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.5)';
-                        e.currentTarget.style.color = 'white';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                        e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
-                      }}
+                      className="btn-secondary"
                     >
-                      New PR
+                      Try another PR
                     </button>
                   </div>
                 </div>
@@ -309,46 +127,172 @@ function App() {
             )}
           </>
         )}
-      </div>
+      </main>
 
       {/* Footer */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 24,
-          left: 0,
-          right: 0,
-          textAlign: 'center',
-          fontSize: 13,
-          color: 'rgba(255, 255, 255, 0.25)',
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 8,
-        }}
-      >
-        <span>Paste a PR link and watch the magic happen</span>
+      <footer className="app-footer animate-reveal-delay-2">
+        <span className="text-label">Made for developers who share</span>
         <a
-          href="https://github.com/akramsaouri"
+          href="https://github.com/drewsephski"
           target="_blank"
           rel="noopener noreferrer"
-          style={{
-            color: 'rgba(255, 255, 255, 0.2)',
-            textDecoration: 'none',
-            fontSize: 12,
-            transition: 'color 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = 'rgba(139, 92, 246, 0.6)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = 'rgba(255, 255, 255, 0.2)';
-          }}
+          className="footer-link text-small"
         >
-          by @akramsaouri
+          @drewsephski
         </a>
-      </div>
+      </footer>
+
+      <style>{`
+        .app-container {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          background: var(--bg-primary);
+        }
+
+        .app-header {
+          padding: var(--space-6) var(--space-6) 0;
+        }
+
+        .logo-mark {
+          display: flex;
+          align-items: center;
+          gap: var(--space-3);
+        }
+
+        .logo-text {
+          font-family: var(--font-display);
+          font-size: 1.375rem;
+          font-weight: 600;
+          letter-spacing: -0.01em;
+          color: var(--ink-primary);
+        }
+
+        .app-main {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          padding: var(--space-8) var(--space-6);
+          max-width: 720px;
+          margin: 0 auto;
+          width: 100%;
+        }
+
+        .input-section {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-8);
+        }
+
+        .hero-text {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-4);
+        }
+
+        .hero-text .text-caption-accent {
+          margin-bottom: var(--space-1);
+        }
+
+        .hero-text .text-display-italic {
+          color: var(--accent);
+        }
+
+        .hero-subtitle {
+          max-width: 480px;
+        }
+
+        .form-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-4);
+        }
+
+        .error-message {
+          padding: var(--space-4) var(--space-5);
+          background: rgba(196, 92, 62, 0.08);
+          border: 1px solid rgba(196, 92, 62, 0.2);
+          border-radius: 10px;
+          color: var(--accent);
+          font-size: 0.875rem;
+          text-align: center;
+        }
+
+        .result-section {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 60vh;
+        }
+
+        .result-card {
+          width: 100%;
+          max-width: 420px;
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-6);
+        }
+
+        .result-header {
+          display: flex;
+          align-items: center;
+          gap: var(--space-4);
+          padding-bottom: var(--space-5);
+          border-bottom: 1px solid var(--border);
+        }
+
+        .avatar {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          border: 2px solid var(--border);
+        }
+
+        .result-meta {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-1);
+        }
+
+        .result-actions {
+          display: flex;
+          gap: var(--space-3);
+        }
+
+        .result-actions button {
+          flex: 1;
+        }
+
+        .app-footer {
+          padding: var(--space-6);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: var(--space-2);
+        }
+
+        .footer-link {
+          color: var(--ink-tertiary);
+          text-decoration: none;
+          font-size: 0.875rem;
+          transition: color var(--duration-fast) var(--ease-out-quart);
+        }
+
+        .footer-link:hover {
+          color: var(--accent);
+        }
+
+        @media (max-width: 640px) {
+          .app-main {
+            padding: var(--space-6) var(--space-4);
+          }
+
+          .result-actions {
+            flex-direction: column;
+          }
+        }
+      `}</style>
     </div>
   );
 }

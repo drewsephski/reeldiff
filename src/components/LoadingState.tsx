@@ -1,169 +1,193 @@
 import { useEffect, useState } from 'react';
 
-const messages = [
-  { text: 'Fetching PR data...', emoji: '🔍' },
-  { text: 'Reading the changes...', emoji: '📖' },
-  { text: 'Asking AI for insights...', emoji: '🤖' },
-  { text: 'Crafting your story...', emoji: '✨' },
-  { text: 'Almost ready...', emoji: '🎬' },
+const stages = [
+  { label: 'Fetching PR', description: 'Retrieving pull request data' },
+  { label: 'Analyzing changes', description: 'Reading diff and context' },
+  { label: 'Crafting narrative', description: 'Building video storyboard' },
+  { label: 'Generating video', description: 'Rendering scenes' },
 ];
 
-// Morphing blob component
-const MorphingBlob = ({ color, size, delay }: { color: string; size: number; delay: number }) => (
-  <div
-    style={{
-      position: 'absolute',
-      width: size,
-      height: size,
-      background: `radial-gradient(circle at 30% 30%, ${color}, transparent 60%)`,
-      filter: 'blur(30px)',
-      opacity: 0.7,
-      animation: `morph 8s ease-in-out infinite, pulse-glow 4s ease-in-out infinite`,
-      animationDelay: `${delay}s`,
-    }}
-  />
-);
-
 export const LoadingState: React.FC = () => {
-  const [messageIndex, setMessageIndex] = useState(0);
+  const [stageIndex, setStageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const messageInterval = setInterval(() => {
-      setMessageIndex((i) => (i + 1) % messages.length);
-    }, 2500);
+    const stageInterval = setInterval(() => {
+      setStageIndex((i) => Math.min(i + 1, stages.length - 1));
+    }, 2000);
 
     const progressInterval = setInterval(() => {
-      setProgress((p) => Math.min(p + 1, 95));
-    }, 150);
+      setProgress((p) => Math.min(p + 0.8, 98));
+    }, 100);
 
     return () => {
-      clearInterval(messageInterval);
+      clearInterval(stageInterval);
       clearInterval(progressInterval);
     };
   }, []);
 
-  const currentMessage = messages[messageIndex];
+  const currentStage = stages[stageIndex];
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 40,
-        animation: 'fade-up 0.5s ease-out',
-      }}
-    >
-      {/* Animated loader container */}
-      <div
-        style={{
-          position: 'relative',
-          width: 160,
-          height: 160,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        {/* Background blobs */}
-        <MorphingBlob color="#FF6B6B" size={120} delay={0} />
-        <MorphingBlob color="#8B5CF6" size={100} delay={1} />
-        <MorphingBlob color="#FBBF24" size={80} delay={2} />
-
-        {/* Spinning ring */}
-        <div
-          style={{
-            position: 'absolute',
-            width: 120,
-            height: 120,
-            borderRadius: '50%',
-            border: '3px solid transparent',
-            borderTopColor: '#FF6B6B',
-            borderRightColor: '#FBBF24',
-            animation: 'spin-slow 1.5s linear infinite',
-          }}
-        />
-
-        {/* Inner spinning ring (opposite direction) */}
-        <div
-          style={{
-            position: 'absolute',
-            width: 90,
-            height: 90,
-            borderRadius: '50%',
-            border: '2px solid transparent',
-            borderBottomColor: '#8B5CF6',
-            borderLeftColor: '#22D3EE',
-            animation: 'spin-slow 2s linear infinite reverse',
-          }}
-        />
-
-        {/* Center emoji */}
-        <div
-          style={{
-            position: 'relative',
-            fontSize: 40,
-            animation: 'bounce-in 0.5s ease-out',
-            zIndex: 10,
-          }}
-          key={messageIndex}
-        >
-          {currentMessage.emoji}
+    <div className="loading-state animate-reveal">
+      <div className="loading-visual">
+        {/* Minimal progress indicator */}
+        <div className="progress-ring">
+          <svg className="progress-svg" viewBox="0 0 100 100">
+            <circle
+              className="progress-track"
+              cx="50"
+              cy="50"
+              r="44"
+            />
+            <circle
+              className="progress-fill"
+              cx="50"
+              cy="50"
+              r="44"
+              style={{
+                strokeDasharray: 276,
+                strokeDashoffset: 276 - (276 * progress) / 100,
+              }}
+            />
+          </svg>
+          <span className="progress-text">{Math.round(progress)}%</span>
         </div>
       </div>
 
-      {/* Message */}
-      <div style={{ textAlign: 'center' }}>
-        <p
-          key={messageIndex}
-          style={{
-            fontSize: 20,
-            fontFamily: "'Bricolage Grotesque', system-ui, sans-serif",
-            fontWeight: 600,
-            color: 'white',
-            marginBottom: 8,
-            animation: 'fade-up 0.4s ease-out',
-          }}
-        >
-          {currentMessage.text}
-        </p>
-
-        {/* Progress bar */}
-        <div
-          style={{
-            width: 200,
-            height: 4,
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: 2,
-            overflow: 'hidden',
-            margin: '16px auto 0',
-          }}
-        >
-          <div
-            style={{
-              width: `${progress}%`,
-              height: '100%',
-              background: 'linear-gradient(90deg, #8B5CF6, #FF6B6B, #FBBF24)',
-              backgroundSize: '200% 100%',
-              animation: 'shimmer 2s linear infinite',
-              borderRadius: 2,
-              transition: 'width 0.15s ease-out',
-            }}
-          />
+      <div className="loading-content">
+        <div className="stage-info">
+          <span className="text-caption-accent stage-number">
+            Step {stageIndex + 1} of {stages.length}
+          </span>
+          <h2 className="text-title stage-label">{currentStage.label}</h2>
+          <p className="text-body stage-description">{currentStage.description}</p>
         </div>
 
-        <p
-          style={{
-            marginTop: 12,
-            fontSize: 13,
-            color: 'rgba(255, 255, 255, 0.4)',
-            fontFamily: "'DM Sans', system-ui, sans-serif",
-          }}
-        >
-          This usually takes 5-10 seconds
-        </p>
+        {/* Stage indicators */}
+        <div className="stage-indicators">
+          {stages.map((_, index) => (
+            <div
+              key={index}
+              className={`stage-dot ${index <= stageIndex ? 'active' : ''}`}
+            />
+          ))}
+        </div>
       </div>
+
+      <style>{`
+        .loading-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: var(--space-8);
+          padding: var(--space-8) 0;
+        }
+
+        .loading-visual {
+          position: relative;
+        }
+
+        .progress-ring {
+          position: relative;
+          width: 120px;
+          height: 120px;
+        }
+
+        .progress-svg {
+          width: 100%;
+          height: 100%;
+          transform: rotate(-90deg);
+        }
+
+        .progress-track {
+          fill: none;
+          stroke: var(--border);
+          stroke-width: 3;
+        }
+
+        .progress-fill {
+          fill: none;
+          stroke: var(--accent);
+          stroke-width: 3;
+          stroke-linecap: round;
+          transition: stroke-dashoffset 0.1s linear;
+        }
+
+        .progress-text {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          font-family: var(--font-body);
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: var(--ink-primary);
+        }
+
+        .loading-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: var(--space-6);
+          text-align: center;
+        }
+
+        .stage-info {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-2);
+        }
+
+        .stage-number {
+          color: var(--accent);
+        }
+
+        .stage-label {
+          font-size: 1.5rem;
+          animation: reveal-up 0.4s var(--ease-out-expo);
+        }
+
+        .stage-description {
+          color: var(--ink-tertiary);
+          animation: reveal-up 0.4s var(--ease-out-expo) 0.05s forwards;
+          opacity: 0;
+          animation-fill-mode: forwards;
+        }
+
+        .stage-indicators {
+          display: flex;
+          gap: var(--space-2);
+        }
+
+        .stage-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--border);
+          transition: all var(--duration-normal) var(--ease-out-quart);
+        }
+
+        .stage-dot.active {
+          background: var(--accent);
+          transform: scale(1.2);
+        }
+
+        @media (max-width: 640px) {
+          .loading-state {
+            gap: var(--space-6);
+          }
+
+          .progress-ring {
+            width: 100px;
+            height: 100px;
+          }
+
+          .progress-text {
+            font-size: 1.125rem;
+          }
+        }
+      `}</style>
     </div>
   );
 };

@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3.0.22",
+    "@openrouter/ai-sdk-provider": "^2.5.1",
     "@remotion/player": "^4.0.411",
     "@vercel/analytics": "^1.6.1",
     "ai": "^6.0.61",
