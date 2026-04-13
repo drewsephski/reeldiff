@@ -35,9 +35,14 @@ export function Navbar({ onBuyCredits }: NavbarProps) {
 
         <div className="nav-actions">
           {isSignedIn && (
-            <Link to="/projects" className="nav-link">
-              Projects
-            </Link>
+            <>
+              <Link to="/projects" className="nav-link">
+                Projects
+              </Link>
+              <Link to="/videos" className="nav-link">
+                Videos
+              </Link>
+            </>
           )}
           <button className="pricing-link" onClick={handlePricingClick}>
             Pricing

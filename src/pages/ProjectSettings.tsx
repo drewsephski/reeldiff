@@ -126,10 +126,38 @@ export default function ProjectSettings() {
     return (
       <div className="settings-page">
         <Navbar onBuyCredits={() => {}} />
-        <div className="loading-state">
-          <div className="spinner" />
-          Loading project settings...
-        </div>
+        <main className="settings-main">
+          <div className="settings-header">
+            <button onClick={() => navigate('/projects')} className="btn-back">
+              <ArrowLeft size={18} />
+              Back to Projects
+            </button>
+            <div className="header-content">
+              <h1 className="text-display">Project Settings</h1>
+            </div>
+          </div>
+          <div className="loading-state">
+            <div className="loading-card">
+              <div className="spinner-large" />
+              <span className="loading-text">Loading project settings...</span>
+              <span className="loading-subtext">Fetching configuration from database</span>
+            </div>
+          </div>
+        </main>
+        <style>{`
+          .settings-page { min-height: 100vh; background: var(--bg-primary); }
+          .settings-main { max-width: 800px; margin: 0 auto; padding: var(--space-8) var(--space-6); }
+          .settings-header { margin-bottom: var(--space-8); }
+          .btn-back { display: flex; align-items: center; gap: var(--space-2); background: none; border: none; color: var(--ink-muted); font-size: 0.875rem; cursor: pointer; margin-bottom: var(--space-4); transition: color var(--duration-fast); }
+          .btn-back:hover { color: var(--ink-primary); }
+          .header-content h1 { font-size: 2rem; margin-bottom: var(--space-3); }
+          .loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--space-8) 0; color: var(--ink-muted); }
+          .loading-card { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); padding: var(--space-12) var(--space-8); background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 400px; }
+          .spinner-large { width: 48px; height: 48px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; }
+          .loading-text { font-size: 1rem; font-weight: 500; color: var(--ink-primary); }
+          .loading-subtext { font-size: 0.875rem; color: var(--ink-muted); }
+          @keyframes spin { to { transform: rotate(360deg); } }
+        `}</style>
       </div>
     );
   }
@@ -337,13 +365,27 @@ export default function ProjectSettings() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: var(--space-4);
-          padding: var(--space-16);
+          padding: var(--space-8) 0;
           color: var(--ink-muted);
         }
 
         .error-state {
           color: var(--accent);
+          gap: var(--space-4);
+          padding: var(--space-16);
+        }
+
+        .loading-card {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: var(--space-4);
+          padding: var(--space-12) var(--space-8);
+          background: var(--bg-secondary);
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          width: 100%;
+          max-width: 400px;
         }
 
         .spinner {
@@ -353,6 +395,26 @@ export default function ProjectSettings() {
           border-top-color: var(--accent);
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
+        }
+
+        .spinner-large {
+          width: 48px;
+          height: 48px;
+          border: 3px solid var(--border);
+          border-top-color: var(--accent);
+          border-radius: 50%;
+          animation: spin 0.9s linear infinite;
+        }
+
+        .loading-text {
+          font-size: 1rem;
+          font-weight: 500;
+          color: var(--ink-primary);
+        }
+
+        .loading-subtext {
+          font-size: 0.875rem;
+          color: var(--ink-muted);
         }
 
         @keyframes spin {
