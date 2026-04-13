@@ -18,7 +18,7 @@ import {
   TRANSITION_DURATION,
 } from './durations';
 
-export const PatchPlayComposition: React.FC<VideoScript> = (props) => {
+export function PatchPlayComposition(props: VideoScript) {
   const { meta, summary, style } = props;
 
   return (
@@ -102,7 +102,7 @@ export const PatchPlayComposition: React.FC<VideoScript> = (props) => {
       </TransitionSeries>
     </AbsoluteFill>
   );
-};
+}
 
 // Helper to get hue from hex color for light leaks
 function getHueFromColor(hexColor: string): number {

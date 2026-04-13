@@ -22,7 +22,7 @@ export const RemotionRoot: React.FC = () => {
   return (
     <Composition
       id="PatchPlay"
-      component={PatchPlayComposition}
+      component={PatchPlayComposition as unknown as React.ComponentType<Record<string, unknown>>}
       durationInFrames={TOTAL_DURATION}
       fps={30}
       width={1920}
