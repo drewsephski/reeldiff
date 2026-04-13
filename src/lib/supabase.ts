@@ -102,6 +102,31 @@ export async function createVideo(video: Omit<Video, 'id' | 'created_at' | 'comp
   return data;
 }
 
+export async function createAppVideo(
+  projectId: string,
+  triggerEvent: string,
+  triggerDetails: Record<string, unknown>,
+  metadata?: Record<string, unknown>
+) {
+  type VideoInsert = Database['public']['Tables']['videos']['Insert'];
+
+  const { data, error } = await supabase
+    .from('videos')
+    .insert({
+      project_id: projectId,
+      trigger_event: triggerEvent,
+      trigger_details: triggerDetails,
+      status: 'pending',
+      source: 'app',
+      metadata: metadata || {},
+    } as VideoInsert)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
 export async function updateVideoStatus(
   videoId: string, 
   status: Video['status'], 

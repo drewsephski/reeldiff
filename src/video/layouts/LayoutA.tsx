@@ -42,6 +42,9 @@ export const LayoutA: React.FC<LayoutProps> = ({ text, accentColor }) => {
   // Split text for word-by-word fade in
   const words = text.split(' ');
 
+  // Background glow effect
+  const glowIntensity = 0.15 + Math.sin(frame * 0.08) * 0.05;
+
   return (
     <div
       style={{
@@ -50,9 +53,21 @@ export const LayoutA: React.FC<LayoutProps> = ({ text, accentColor }) => {
         gap: 40,
         transform: `translateX(${exitX}px) translateY(${floatY}px)`,
         opacity: exitOpacity,
-        padding: '0 60px',
+        padding: '60px 80px',
+        position: 'relative',
       }}
     >
+      {/* Ambient glow behind content */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: `radial-gradient(ellipse at 20% 50%, ${accentColor}${Math.floor(glowIntensity * 100).toString(16).padStart(2, '0')} 0%, transparent 70%)`,
+          filter: 'blur(40px)',
+          zIndex: -1,
+        }}
+      />
+
       {/* Icon container with ring effect */}
       <div style={{ position: 'relative' }}>
         {/* Expanding ring */}
@@ -66,7 +81,7 @@ export const LayoutA: React.FC<LayoutProps> = ({ text, accentColor }) => {
             opacity: ringOpacity,
           }}
         />
-        {/* Main icon */}
+        {/* Main icon with glow */}
         <div
           style={{
             width: 90,
@@ -78,7 +93,7 @@ export const LayoutA: React.FC<LayoutProps> = ({ text, accentColor }) => {
             alignItems: 'center',
             fontSize: 44,
             transform: `scale(${iconScale}) rotate(${iconRotate}deg)`,
-            boxShadow: `0 8px 32px ${accentColor}44, 0 0 0 4px ${accentColor}22`,
+            boxShadow: `0 8px 32px ${accentColor}60, 0 0 60px ${accentColor}40, 0 0 0 4px ${accentColor}30`,
           }}
         >
           ✦
