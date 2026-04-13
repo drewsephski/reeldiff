@@ -6,7 +6,7 @@ import {
   useVideoConfig,
   Easing,
 } from 'remotion';
-import { springs, useWordHighlight } from '../animations';
+import { enhancedSprings, useStaggeredWords, useGlowPulse, useWaveFloat, useSpotlightSweep } from '../enhancedAnimations';
 import { typography, colors, spacing, radius, toneConfigs, layout } from '../designSystem';
 
 interface HeadlineSceneProps {
@@ -16,15 +16,13 @@ interface HeadlineSceneProps {
   tone: 'celebratory' | 'relief' | 'technical' | 'minor' | 'educational' | 'hype';
 }
 
-// Kinetic typography spotlight component
-const Spotlight: React.FC<{ frame: number; accentColor: string }> = ({
-  frame,
+// Dynamic spotlight sweep component
+const Spotlight: React.FC<{ accentColor: string; tone: string }> = ({
   accentColor,
+  tone,
 }) => {
-  const spotlightX = interpolate(frame, [0, 120], [-200, 2120], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
+  const sweep = useSpotlightSweep(10, 100, 'left');
+  const intensity = tone === 'hype' || tone === 'celebratory' ? 0.25 : 0.15;
 
   return (
     <div
@@ -34,28 +32,33 @@ const Spotlight: React.FC<{ frame: number; accentColor: string }> = ({
         left: 0,
         right: 0,
         bottom: 0,
-        background: `radial-gradient(circle 400px at ${spotlightX}px 50%, ${accentColor}20 0%, transparent 70%)`,
+        background: `radial-gradient(circle 500px at ${sweep.x}px 50%, ${accentColor}${Math.floor(intensity * 255).toString(16).padStart(2, '0')} 0%, transparent 70%)`,
         pointerEvents: 'none',
+        opacity: sweep.opacity,
       }}
     />
   );
 };
 
-// Organic floating orbs
+// Enhanced floating orbs with varied shapes and motion
 const FloatingOrbs: React.FC<{
   frame: number;
   accentColor: string;
   count: number;
-}> = ({ frame, accentColor, count }) => {
+  secondaryColor?: string;
+}> = ({ frame, accentColor, count, secondaryColor }) => {
+  const orbColors = [accentColor, secondaryColor || '#5e81ac', '#f4a261'];
   const orbs = Array.from({ length: count }, (_, i) => {
-    const baseX = 15 + (i * 137.5) % 70;
-    const baseY = 15 + (i * 72) % 70;
-    const floatX = Math.sin((frame + i * 50) * 0.015) * 40;
-    const floatY = Math.cos((frame + i * 50) * 0.012) * 30;
-    const size = 60 + (i % 4) * 40;
-    const opacity = 0.04 + (i % 3) * 0.02;
+    const baseX = 10 + (i * 137.5) % 80;
+    const baseY = 10 + (i * 72) % 70;
+    const floatX = Math.sin((frame + i * 60) * 0.018) * 50;
+    const floatY = Math.cos((frame + i * 60) * 0.015) * 40;
+    const size = 80 + (i % 5) * 50;
+    const opacity = 0.03 + (i % 4) * 0.02;
+    const scale = 1 + Math.sin(frame * 0.03 + i) * 0.15;
+    const color = orbColors[i % orbColors.length];
 
-    return { x: baseX + floatX, y: baseY + floatY, size, opacity };
+    return { x: baseX + floatX * 0.01, y: baseY + floatY * 0.01, size, opacity, scale, color };
   });
 
   return (
@@ -67,12 +70,13 @@ const FloatingOrbs: React.FC<{
             position: 'absolute',
             left: `${orb.x}%`,
             top: `${orb.y}%`,
-            width: orb.size,
-            height: orb.size,
-            borderRadius: '50%',
-            backgroundColor: accentColor,
+            width: orb.size * orb.scale,
+            height: orb.size * orb.scale,
+            borderRadius: i % 3 === 0 ? '50%' : i % 3 === 1 ? '30%' : '60% 40%',
+            backgroundColor: orb.color,
             opacity: orb.opacity,
-            filter: 'blur(40px)',
+            filter: 'blur(50px)',
+            transform: `rotate(${frame * 0.2 + i * 30}deg)`,
           }}
         />
       ))}
@@ -80,26 +84,75 @@ const FloatingOrbs: React.FC<{
   );
 };
 
-// Tone badge component
+// Particle burst effect
+const ParticleBurst: React.FC<{
+  frame: number;
+  fps: number;
+  accentColor: string;
+  intensity: number;
+}> = ({ frame, fps, accentColor, intensity }) => {
+  const particleCount = Math.floor(intensity * 15);
+
+  const particles = Array.from({ length: particleCount }, (_, i) => {
+    const delay = i * 2;
+    const particleSpring = spring({
+      frame: frame - 15 - delay,
+      fps,
+      config: enhancedSprings.snappy,
+    });
+    const angle = (i / particleCount) * Math.PI * 2 + (frame * 0.01);
+    const distance = 100 + (i % 3) * 80;
+    const x = Math.cos(angle) * interpolate(particleSpring, [0, 1], [0, distance]);
+    const y = Math.sin(angle) * interpolate(particleSpring, [0, 1], [0, distance]);
+    const scale = interpolate(particleSpring, [0, 0.5, 1], [0, 1, 0.3]);
+    const opacity = interpolate(particleSpring, [0, 0.3, 1], [0, 0.8, 0]);
+    const size = 4 + (i % 4) * 3;
+
+    return { x, y, scale, opacity, size };
+  });
+
+  return (
+    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+      {particles.map((p, i) => (
+        <div
+          key={i}
+          style={{
+            position: 'absolute',
+            width: p.size,
+            height: p.size,
+            borderRadius: '50%',
+            backgroundColor: accentColor,
+            transform: `translate(${p.x}px, ${p.y}px) scale(${p.scale})`,
+            opacity: p.opacity,
+            boxShadow: `0 0 ${p.size * 2}px ${accentColor}`,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+// Enhanced tone badge with glow pulse
 const ToneBadge: React.FC<{
   tone: string;
   frame: number;
   fps: number;
   accentColor: string;
 }> = ({ tone, frame, fps, accentColor }) => {
-  const badgeSpring = spring({ frame: frame - 20, fps, config: springs.snappy });
-  const badgeScale = interpolate(badgeSpring, [0, 1], [0.8, 1]);
-  const badgeOpacity = interpolate(frame, [20, 35], [0, 1], {
+  const badgeSpring = spring({ frame: frame - 10, fps, config: enhancedSprings.snap });
+  const badgeScale = interpolate(badgeSpring, [0, 0.6, 1], [0, 1.1, 1]);
+  const badgeOpacity = interpolate(frame, [10, 25], [0, 1], {
     extrapolateRight: 'clamp',
   });
+  const glow = useGlowPulse(0.3, 0.1);
 
-  const toneLabels: Record<string, { label: string; icon: string }> = {
-    celebratory: { label: 'CELEBRATION', icon: '✦' },
-    relief: { label: 'RELIEF', icon: '✓' },
-    technical: { label: 'TECH UPDATE', icon: '⚡' },
-    minor: { label: 'MAINTENANCE', icon: '◆' },
-    educational: { label: 'LEARNING', icon: '◈' },
-    hype: { label: 'EXCITING', icon: '★' },
+  const toneLabels: Record<string, { label: string; icon: string; gradient: string }> = {
+    celebratory: { label: 'CELEBRATION', icon: '✦', gradient: 'linear-gradient(135deg, #fbbf24, #f59e0b)' },
+    relief: { label: 'RELIEF', icon: '✓', gradient: 'linear-gradient(135deg, #81b29a, #6b9c7a)' },
+    technical: { label: 'TECH UPDATE', icon: '⚡', gradient: 'linear-gradient(135deg, #60a5fa, #3b82f6)' },
+    minor: { label: 'MAINTENANCE', icon: '◆', gradient: 'linear-gradient(135deg, #9ca3af, #6b7280)' },
+    educational: { label: 'LEARNING', icon: '◈', gradient: 'linear-gradient(135deg, #a78bfa, #8b5cf6)' },
+    hype: { label: 'EXCITING', icon: '★', gradient: 'linear-gradient(135deg, #f472b6, #ec4899)' },
   };
 
   const { label, icon } = toneLabels[tone] || toneLabels.celebratory;
@@ -110,19 +163,20 @@ const ToneBadge: React.FC<{
         display: 'flex',
         alignItems: 'center',
         gap: spacing.sm,
-        padding: `${spacing.sm}px ${spacing.md}px`,
-        backgroundColor: `${accentColor}15`,
-        border: `1px solid ${accentColor}40`,
+        padding: `${spacing.sm}px ${spacing.lg}px`,
+        background: `${accentColor}12`,
+        border: `2px solid ${accentColor}${Math.floor(glow.intensity * 100).toString(16).padStart(2, '0')}`,
         borderRadius: radius.xl,
         transform: `scale(${badgeScale})`,
         opacity: badgeOpacity,
+        boxShadow: `0 0 ${20 + glow.intensity * 20}px ${accentColor}${Math.floor(glow.intensity * 60).toString(16).padStart(2, '0')}`,
       }}
     >
-      <span style={{ fontSize: 16 }}>{icon}</span>
+      <span style={{ fontSize: 18, filter: `drop-shadow(0 0 4px ${accentColor})` }}>{icon}</span>
       <span
         style={{
           fontSize: typography.utility.xs,
-          fontWeight: typography.weight.semibold,
+          fontWeight: typography.weight.bold,
           color: accentColor,
           letterSpacing: typography.tracking.wider,
         }}
@@ -142,33 +196,37 @@ export const HeadlineScene: React.FC<HeadlineSceneProps> = ({
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
-  // Split headline into words
+  // Split headline into words for staggered animation
   const words = headline.split(' ');
-  const highlightedWords = useWordHighlight(words, 12, 7);
+  const staggeredWords = useStaggeredWords(words, 15, 5, 3);
 
   // Get tone configuration
   const toneConfig = toneConfigs[tone] || toneConfigs.celebratory;
 
-  // Emoji entrance with elegant physics
-  const emojiSpring = spring({ frame, fps, config: springs.bouncy });
-  const emojiScale = interpolate(emojiSpring, [0, 1], [0, 1]);
-  const emojiY = interpolate(emojiSpring, [0, 1], [60, 0]);
-  const emojiRotate = interpolate(emojiSpring, [0, 1], [45, 0]);
+  // Enhanced emoji entrance with dramatic physics
+  const emojiSpring = spring({ frame, fps, config: enhancedSprings.elastic });
+  const emojiScale = interpolate(emojiSpring, [0, 0.5, 0.8, 1], [0, 1.2, 0.95, 1]);
+  const emojiY = interpolate(emojiSpring, [0, 1], [80, 0]);
+  const emojiRotate = interpolate(emojiSpring, [0, 1], [90, 0]);
 
-  // Subtle continuous animation
-  const emojiPulse = Math.sin(frame * 0.06) * 0.03 + 1;
+  // Wave float for organic motion
+  const { y: waveY, rotate: waveRotate } = useWaveFloat(0, 6, 0.05, 0);
 
-  // Exit animation
+  // Glow pulse effect
+  const glow = useGlowPulse(0.4, 0.08);
+
+  // Enhanced exit animation
   const exitProgress = interpolate(
     frame,
-    [durationInFrames - 20, durationInFrames],
+    [durationInFrames - 25, durationInFrames],
     [0, 1],
     { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
   );
-  const exitY = interpolate(exitProgress, [0, 1], [0, -60], {
-    easing: Easing.out(Easing.quad),
+  const exitY = interpolate(exitProgress, [0, 1], [0, -80], {
+    easing: Easing.out(Easing.cubic),
   });
-  const exitOpacity = interpolate(exitProgress, [0, 1], [1, 0]);
+  const exitScale = interpolate(exitProgress, [0, 1], [1, 0.95]);
+  const exitOpacity = interpolate(exitProgress, [0, 0.8, 1], [1, 1, 0]);
 
   // Progress dots for scene indicator
   const sceneIndex = 1;
@@ -184,15 +242,26 @@ export const HeadlineScene: React.FC<HeadlineSceneProps> = ({
         overflow: 'hidden',
       }}
     >
-      {/* Organic background orbs */}
+      {/* Enhanced floating orbs with varied colors */}
       <FloatingOrbs
         frame={frame}
         accentColor={accentColor}
         count={toneConfig.particleCount}
+        secondaryColor={colors.accent.sage}
       />
 
-      {/* Spotlight effect */}
-      <Spotlight frame={frame} accentColor={accentColor} />
+      {/* Particle burst for celebratory tones */}
+      {(tone === 'celebratory' || tone === 'hype') && (
+        <ParticleBurst
+          frame={frame}
+          fps={fps}
+          accentColor={accentColor}
+          intensity={tone === 'hype' ? 1.5 : 1}
+        />
+      )}
+
+      {/* Dynamic spotlight sweep */}
+      <Spotlight accentColor={accentColor} tone={tone} />
 
       {/* Top vignette */}
       <div
@@ -207,36 +276,36 @@ export const HeadlineScene: React.FC<HeadlineSceneProps> = ({
         }}
       />
 
-      {/* Content container */}
+      {/* Content container with enhanced animations */}
       <div
         style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           gap: spacing.lg,
-          transform: `translateY(${exitY}px)`,
+          transform: `translateY(${exitY + waveY}px) scale(${exitScale})`,
           opacity: exitOpacity,
           zIndex: 10,
           maxWidth: layout.maxContentWidth,
           padding: `0 ${spacing['2xl']}px`,
         }}
       >
-        {/* Tone badge */}
+        {/* Enhanced tone badge */}
         <ToneBadge tone={tone} frame={frame} fps={fps} accentColor={accentColor} />
 
-        {/* Emoji with entrance */}
+        {/* Emoji with enhanced entrance and glow */}
         <div
           style={{
-            fontSize: 120,
-            transform: `scale(${emojiScale * emojiPulse}) translateY(${emojiY}px) rotate(${emojiRotate}deg)`,
-            filter: `drop-shadow(0 16px 40px ${accentColor}40)`,
+            fontSize: 140,
+            transform: `scale(${emojiScale}) translateY(${emojiY + waveY}px) rotate(${emojiRotate + waveRotate}deg)`,
+            filter: `drop-shadow(0 20px 60px ${accentColor}${Math.floor(glow.intensity * 80).toString(16).padStart(2, '0')})`,
             marginBottom: spacing.sm,
           }}
         >
           {emoji}
         </div>
 
-        {/* Headline with kinetic typography */}
+        {/* Headline with enhanced kinetic typography */}
         <h1
           style={{
             fontSize: typography.display.md,
@@ -249,19 +318,20 @@ export const HeadlineScene: React.FC<HeadlineSceneProps> = ({
             margin: 0,
           }}
         >
-          {highlightedWords.map((wordData, i) => (
+          {staggeredWords.map((wordData, i) => (
             <span
               key={i}
               style={{
                 display: 'inline-block',
                 marginRight: '0.25em',
                 marginBottom: '0.1em',
-                color: wordData.isHighlighted ? accentColor : colors.text.primary,
-                textShadow: wordData.isHighlighted
-                  ? `0 0 60px ${accentColor}60`
+                color: wordData.isEmphasis ? accentColor : colors.text.primary,
+                textShadow: wordData.isEmphasis
+                  ? `0 0 50px ${accentColor}${Math.floor(glow.intensity * 100).toString(16).padStart(2, '0')}`
                   : 'none',
                 opacity: wordData.opacity,
-                transform: wordData.isHighlighted ? 'translateY(-2px)' : 'translateY(0)',
+                transform: `translateY(${wordData.y}px) scale(${wordData.scale})`,
+                fontSize: wordData.isEmphasis ? '1.05em' : '1em',
                 transition: 'transform 0.15s ease-out',
               }}
             >
@@ -270,25 +340,26 @@ export const HeadlineScene: React.FC<HeadlineSceneProps> = ({
           ))}
         </h1>
 
-        {/* Animated underline */}
+        {/* Enhanced animated underline with glow */}
         <div
           style={{
             width: interpolate(
               frame,
-              [words.length * 7 + 25, words.length * 7 + 55],
-              [0, 180],
+              [words.length * 5 + 20, words.length * 5 + 50],
+              [0, 200],
               { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
             ),
-            height: 3,
-            background: `linear-gradient(90deg, transparent 0%, ${accentColor} 50%, transparent 100%)`,
+            height: 4,
+            background: `linear-gradient(90deg, transparent 0%, ${accentColor} 30%, ${accentColor} 70%, transparent 100%)`,
             borderRadius: radius.sm,
             marginTop: spacing.md,
             opacity: 0.8,
+            boxShadow: `0 0 ${10 + glow.intensity * 10}px ${accentColor}60`,
           }}
         />
       </div>
 
-      {/* Bottom progress indicator */}
+      {/* Enhanced bottom progress indicator */}
       <div
         style={{
           position: 'absolute',
@@ -302,20 +373,27 @@ export const HeadlineScene: React.FC<HeadlineSceneProps> = ({
       >
         {[0, 1, 2, 3, 4].map((i) => {
           const isActive = i === sceneIndex;
-          const dotOpacity = interpolate(frame, [30 + i * 4, 40 + i * 4], [0, isActive ? 1 : 0.35], {
-            extrapolateRight: 'clamp',
+          const dotSpring = spring({
+            frame: frame - (25 + i * 3),
+            fps,
+            config: enhancedSprings.gentle,
           });
+          const dotOpacity = isActive
+            ? 0.8 + Math.sin(frame * 0.15) * 0.2
+            : interpolate(dotSpring, [0, 1], [0, 0.35]);
+          const dotScale = isActive ? 1 : interpolate(dotSpring, [0, 1], [0.6, 1]);
 
           return (
             <div
               key={i}
               style={{
-                width: isActive ? 32 : 8,
-                height: 8,
+                width: isActive ? 36 : 10,
+                height: 10,
                 borderRadius: radius.full,
                 backgroundColor: isActive ? accentColor : colors.text.muted,
                 opacity: dotOpacity,
-                transition: 'width 0.3s ease',
+                transform: `scale(${dotScale})`,
+                boxShadow: isActive ? `0 0 12px ${accentColor}60` : 'none',
               }}
             />
           );

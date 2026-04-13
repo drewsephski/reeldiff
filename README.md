@@ -1,16 +1,16 @@
-# PatchPlay
+# ReelDiff
 
-Turn any GitHub PR into a short-form video.
+Turn any GitHub PR or repository into a short-form video.
 
-Paste a PR link, get an animated video summarizing what changed — headline, key bullets, stats. Built with Remotion for in-browser video rendering and AI for PR analysis.
+Paste a PR or repo link, get an animated video summarizing what changed — headline, key bullets, stats. Built with Remotion for in-browser video rendering and AI for PR analysis.
 
-![PatchPlay demo](public/demo.gif)
+![ReelDiff demo](public/demo.gif)
 
-**[Try it live](https://patchplay.vercel.app)**
+**[Try it live](https://reeldiff.vercel.app)**
 
 ## How it works
 
-1. Paste a GitHub PR URL
+1. Paste a GitHub PR or repository link
 2. AI analyzes the diff — title, description, changed files
 3. Generates a video script: headline, bullet points, vibe, accent color
 4. Remotion renders an animated video with intro, headlines, bullets, and outro scenes
@@ -30,14 +30,3 @@ Paste a PR link, get an animated video summarizing what changed — headline, ke
 npm install
 npm run dev
 ```
-
-Create `.env.local` with:
-
-```
-OPENAI_API_KEY=your-key
-```
-
-## License
-
-MIT
-# reeldiff
