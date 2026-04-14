@@ -10,10 +10,12 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     branch: process.env.VERCEL_GIT_COMMIT_REF || "unknown",
     env: process.env.NODE_ENV || "development",
     checks: {
-      trigger: !!process.env.TRIGGER_SECRET_KEY,
+      trigger: !!(process.env.TRIGGER_SECRET_KEY || process.env.TRIGGER_API_KEY),
       github: !!process.env.GITHUB_WEBHOOK_SECRET,
       openrouter: !!process.env.OPENROUTER_API_KEY,
     },
+    triggerKeyType: process.env.TRIGGER_SECRET_KEY ? "TRIGGER_SECRET_KEY" : 
+                    process.env.TRIGGER_API_KEY ? "TRIGGER_API_KEY" : "none",
   };
 
   // Return 200 if all critical env vars are set
