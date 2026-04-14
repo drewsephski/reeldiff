@@ -49,6 +49,17 @@ interface GitHubWebhookPayload {
 export const processGitHubWebhook = task({
   id: "process-github-webhook",
   run: async (payload: GitHubWebhookPayload) => {
+    // Runtime validation for missing payload (e.g., MCP test calls)
+    if (!payload || typeof payload !== "object") {
+      throw new Error("Missing payload: expected GitHubWebhookPayload with action, repository, and sender");
+    }
+    if (!payload.action) {
+      throw new Error("Missing required field: payload.action");
+    }
+    if (!payload.repository) {
+      throw new Error("Missing required field: payload.repository");
+    }
+    
     console.log(`Processing webhook: ${payload.action} for ${payload.repository.full_name}`);
 
     // Find projects monitoring this repository
