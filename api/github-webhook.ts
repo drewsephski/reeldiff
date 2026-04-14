@@ -107,7 +107,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Trigger the Trigger.dev task
   try {
-    const { tasks } = await import("@trigger.dev/sdk/v3");
+    const { tasks } = await import("@trigger.dev/sdk");
     
     const taskPayload = {
       action: payload.action,
