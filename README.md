@@ -4,9 +4,7 @@
 
 Paste a PR link. Paste a repo URL. Get a polished, animated video with headlines, key points, and stats — ready to share on Twitter, LinkedIn, Slack, or Discord. No editing required.
 
-![ReelDiff demo](public/demo.gif)
-
-**[Try it live](https://reeldiff.vercel.app)**
+## **[Try it live](https://reeldiff.vercel.app)**
 
 ---
 
