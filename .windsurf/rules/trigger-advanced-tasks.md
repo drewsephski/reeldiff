@@ -309,7 +309,13 @@ await heavyTask.trigger(payload, {
 ## Idempotency
 
 ```ts
-import { task, idempotencyKeys } from "@trigger.dev/sdk";
+import { task } from "@trigger.dev/sdk";
+import { createHash } from "node:crypto";
+
+// Derive deterministic idempotency key from payload
+function createIdempotencyKey(payload: { orderId: string }): string {
+  return `payment-${payload.orderId}`;
+}
 
 export const paymentTask = task({
   id: "process-payment",
@@ -317,8 +323,8 @@ export const paymentTask = task({
     maxAttempts: 3,
   },
   run: async (payload: { orderId: string; amount: number }) => {
-    // Automatically scoped to this task run, so if the task is retried, the idempotency key will be the same
-    const idempotencyKey = await idempotencyKeys.create(`payment-${payload.orderId}`);
+    // Derive key from payload - same payload = same key on retry
+    const idempotencyKey = createIdempotencyKey(payload);
 
     // Ensure payment is processed only once
     await chargeCustomer.trigger(payload, {
@@ -328,10 +334,8 @@ export const paymentTask = task({
   },
 });
 
-// Payload-based idempotency
-import { createHash } from "node:crypto";
-
-function createPayloadHash(payload: any): string {
+// Payload-based idempotency (for complex payloads)
+function createPayloadHash(payload: unknown): string {
   const hash = createHash("sha256");
   hash.update(JSON.stringify(payload));
   return hash.digest("hex");
@@ -339,9 +343,9 @@ function createPayloadHash(payload: any): string {
 
 export const deduplicatedTask = task({
   id: "deduplicated-task",
-  run: async (payload) => {
-    const payloadHash = createPayloadHash(payload);
-    const idempotencyKey = await idempotencyKeys.create(payloadHash);
+  run: async (payload: unknown) => {
+    // Deterministic hash - same payload = same key on retry
+    const idempotencyKey = createPayloadHash(payload);
 
     await processData.trigger(payload, { idempotencyKey });
   },
@@ -391,6 +395,8 @@ export const batchProcessor = task({
 });
 
 // Update parent metadata from child task
+import { task, metadata } from "@trigger.dev/sdk";
+
 export const childTask = task({
   id: "child-task",
   run: async (payload, { ctx }) => {

@@ -1,4 +1,4 @@
-import { task } from "@trigger.dev/sdk/v3";
+import { task } from "@trigger.dev/sdk";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../types/supabase";
 import { distributeVideo } from "./distribute-video";
