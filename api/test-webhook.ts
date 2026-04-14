@@ -9,6 +9,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const { tasks } = await import("@trigger.dev/sdk/v3");
     
+    // Log environment info for debugging
+    console.log("[TEST] Trigger.dev environment check:", {
+      secretKeyPrefix: process.env.TRIGGER_SECRET_KEY?.slice(0, 10) + "...",
+      nodeEnv: process.env.NODE_ENV,
+      vercelEnv: process.env.VERCEL_ENV,
+    });
+    
     // Test payload matching GitHub webhook structure
     const testPayload = {
       action: "opened",
@@ -39,6 +46,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(202).json({
       message: "Test webhook triggered",
       runId: result.id,
+      envInfo: {
+        nodeEnv: process.env.NODE_ENV,
+        vercelEnv: process.env.VERCEL_ENV,
+        hasTriggerSecret: !!process.env.TRIGGER_SECRET_KEY,
+      },
       payload: testPayload
     });
   } catch (error) {
