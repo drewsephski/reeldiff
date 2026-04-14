@@ -105,50 +105,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   console.log("Parsed webhook payload:", JSON.stringify(payload, null, 2));
 
-  // Trigger the Trigger.dev task
-  try {
-    const { tasks } = await import("@trigger.dev/sdk");
-    
-    const taskPayload = {
-      action: payload.action,
-      pull_request: payload.pull_request,
-      repository: payload.repository,
-      sender: payload.sender,
-    };
-    
-    console.log("Triggering task with payload:", JSON.stringify(taskPayload, null, 2));
-    
-    // Trigger the webhook processing task
-    const result = await tasks.trigger("process-github-webhook", taskPayload);
+  // Trigger the background task
+  // Note: Requires TRIGGER_SECRET_KEY env var (not TRIGGER_API_KEY)
+  const { tasks } = await import("@trigger.dev/sdk");
+  
+  const taskPayload = {
+    action: payload.action,
+    pull_request: payload.pull_request,
+    repository: payload.repository,
+    sender: payload.sender,
+  };
+  
+  console.log("Triggering task with payload:", JSON.stringify(taskPayload, null, 2));
 
-    console.log("Triggered process-github-webhook task:", {
-      runId: result.id,
-      event,
-      action: payload.action,
-      repository: payload.repository?.full_name,
-    });
+  // Trigger the webhook processing task
+  const result = await tasks.trigger("process-github-webhook", taskPayload);
 
-    return res.status(202).json({
-      message: "Webhook received and processing triggered",
-      event,
-      deliveryId,
-      triggered: true,
-      runId: result.id,
-    });
-  } catch (error) {
-    console.error("[WEBHOOK] Failed to trigger task:", error);
-    return res.status(500).json({
-      error: "Failed to process webhook",
-      details: error instanceof Error ? error.message : "Unknown error",
-    });
-  }
-  } catch (err) {
-    console.error("[WEBHOOK] Unhandled error:", err);
-    return res.status(500).json({
-      error: "Internal server error",
-      details: err instanceof Error ? err.message : "Unknown error",
-    });
-  }
+  console.log("Triggered process-github-webhook task:", {
+    runId: result.id,
+    event,
+    action: payload.action,
+    repository: payload.repository?.full_name,
+  });
+
+  return res.status(202).json({
+    message: "Webhook received and processing triggered",
+    event,
+    deliveryId,
+    triggered: true,
+    runId: result.id,
+  });
+} catch (error) {
+  console.error("[WEBHOOK] Failed to trigger task:", error);
+  return res.status(500).json({
+    error: "Failed to process webhook",
+    details: error instanceof Error ? error.message : "Unknown error",
+  });
+}
 }
 
 // Helper function to verify GitHub webhook signature
